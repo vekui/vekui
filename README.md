@@ -36,6 +36,9 @@ examples/   Small examples and smoke-test fixtures
 ```bash
 corepack pnpm install
 corepack pnpm verify
+corepack pnpm vekui validate --json
+corepack pnpm vekui registry list
+corepack pnpm vekui tokens inspect
 ```
 
 ## V1 Focus
@@ -46,3 +49,12 @@ corepack pnpm verify
 - Token Studio groundwork
 - Pencil adapter groundwork
 
+## Current CLI Surface
+
+- `vekui validate`
+- `vekui validate schema`
+- `vekui validate registry`
+- `vekui registry list`
+- `vekui tokens inspect [token-document-path]`
+
+All commands support `--json` for machine-readable output.

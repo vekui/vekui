@@ -8,10 +8,12 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "vekui": "tsx packages/cli/src/bin.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "schema:validate": "tsx scripts/validate-schema.ts",
-    "registry:smoke": "tsx scripts/registry-smoke.ts",
+    "schema:validate": "pnpm exec tsx packages/cli/src/bin.ts validate schema",
+    "registry:smoke": "pnpm exec tsx packages/cli/src/bin.ts validate registry",
+    "tokens:inspect": "pnpm exec tsx packages/cli/src/bin.ts tokens inspect",
     "verify": "pnpm lint && pnpm typecheck && pnpm schema:validate && pnpm registry:smoke"
   },
   "devDependencies": {
@@ -26,4 +28,3 @@
     "typescript-eslint": "^8.46.2"
   }
 }
-
