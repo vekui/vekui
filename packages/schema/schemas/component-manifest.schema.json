@@ -7,6 +7,10 @@
       "type": "string",
       "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
     },
+    "compositionSurfaceId": {
+      "type": "string",
+      "pattern": "^((pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*|app\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*)$"
+    },
     "tokenPath": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+$"
@@ -167,7 +171,7 @@
       "properties": {
         "recommendedChildren": {
           "type": "array",
-          "items": { "$ref": "#/$defs/componentId" },
+          "items": { "$ref": "#/$defs/compositionSurfaceId" },
           "uniqueItems": true
         }
       },

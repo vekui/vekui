@@ -7,9 +7,13 @@
       "type": "string",
       "pattern": "^(pc|h5|neutral|recipes)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
     },
-    "surfaceId": {
+    "catalogSurfaceId": {
       "type": "string",
       "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "compositionSurfaceId": {
+      "type": "string",
+      "pattern": "^((pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*|app\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*)$"
     },
     "tokenPath": {
       "type": "string",
@@ -22,7 +26,7 @@
         "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
         "accepts": {
           "type": "array",
-          "items": { "$ref": "#/$defs/surfaceId" },
+          "items": { "$ref": "#/$defs/compositionSurfaceId" },
           "minItems": 1,
           "uniqueItems": true
         },
@@ -51,13 +55,13 @@
     "layout": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "requiredBlocks": {
       "type": "array",
-      "items": { "$ref": "#/$defs/surfaceId" },
+      "items": { "$ref": "#/$defs/catalogSurfaceId" },
       "minItems": 1,
       "uniqueItems": true
     },
     "optionalBlocks": {
       "type": "array",
-      "items": { "$ref": "#/$defs/surfaceId" },
+      "items": { "$ref": "#/$defs/catalogSurfaceId" },
       "uniqueItems": true
     },
     "regions": { "type": "array", "items": { "$ref": "#/$defs/region" }, "minItems": 1 },

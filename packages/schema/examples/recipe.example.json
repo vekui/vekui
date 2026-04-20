@@ -8,12 +8,12 @@
   "regions": [
     {
       "name": "body",
-      "accepts": ["neutral.filter-bar"],
+      "accepts": ["neutral.filter-bar", "app.result-region"],
       "required": true
     }
   ],
-  "layoutRules": ["Render neutral.filter-bar at the top of the body region before app-specific results."],
-  "interactionRules": ["Swap the app-specific result region for empty state when data is absent."],
+  "layoutRules": ["Render neutral.filter-bar before app.result-region within the body region."],
+  "interactionRules": ["Let app.result-region swap between table, list, and empty-state content without moving neutral.filter-bar."],
   "recommendedTokens": ["semantic.color.action.primary"],
   "antiPatterns": ["Do not place destructive bulk actions above filters."]
 }

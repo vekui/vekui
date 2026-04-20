@@ -44,12 +44,18 @@ export interface RegistrySummary {
   types: Record<string, number>;
 }
 
+const appOwnedSurfaceIdPattern = /^app\.[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
+
 function incrementCounter(counter: Record<string, number>, key: string): void {
   counter[key] = (counter[key] ?? 0) + 1;
 }
 
 function sortCounter(counter: Record<string, number>): Record<string, number> {
   return Object.fromEntries(Object.entries(counter).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+function isAppOwnedSurfaceId(value: string): boolean {
+  return appOwnedSurfaceIdPattern.test(value);
 }
 
 async function checkRelativePath(rootDir: string, relativePath: string): Promise<RegistryRefCheck> {
@@ -223,18 +229,28 @@ function collectMappingConsistencyIssues(
   return issues;
 }
 
-function collectRegistryReferenceIssues(item: RegistryItem, registryIds: Set<string>): string[] {
+function collectRegistryReferenceIssues(
+  item: RegistryItem,
+  registryItemsById: Map<string, RegistryItem>
+): string[] {
   const issues: string[] = [];
 
   for (const dependencyRef of item.dependencyRefs) {
-    if (!registryIds.has(dependencyRef)) {
+    if (!registryItemsById.has(dependencyRef)) {
       issues.push(`dependencyRef ${dependencyRef} was not found in the registry catalog.`);
     }
   }
 
   for (const preferredRecipe of item.aiHints.preferredRecipes) {
-    if (!registryIds.has(preferredRecipe)) {
+    const registryItem = registryItemsById.get(preferredRecipe);
+
+    if (!registryItem) {
       issues.push(`preferredRecipe ${preferredRecipe} was not found in the registry catalog.`);
+      continue;
+    }
+
+    if (registryItem.type !== "recipe") {
+      issues.push(`preferredRecipe ${preferredRecipe} must point to a registry item with type recipe.`);
     }
   }
 
@@ -245,7 +261,7 @@ function collectComponentCatalogIssues(manifest: ComponentManifest, surfaceIds: 
   const issues: string[] = [];
 
   for (const childId of manifest.composition.recommendedChildren) {
-    if (!surfaceIds.has(childId)) {
+    if (!surfaceIds.has(childId) && !isAppOwnedSurfaceId(childId)) {
       issues.push(`component manifest recommended child ${childId} was not found in the surface catalog.`);
     }
   }
@@ -270,7 +286,7 @@ function collectRecipeCatalogIssues(manifest: RecipeDocument, surfaceIds: Set<st
 
   for (const region of manifest.regions) {
     for (const acceptedSurface of region.accepts) {
-      if (!surfaceIds.has(acceptedSurface)) {
+      if (!surfaceIds.has(acceptedSurface) && !isAppOwnedSurfaceId(acceptedSurface)) {
         issues.push(`recipe region ${region.name} accepts missing surface ${acceptedSurface}.`);
       }
     }
@@ -623,7 +639,7 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
 
 export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()): Promise<RegistryVerificationResult[]> {
   const results = await loadRegistryItems(rootDir);
-  const registryIds = new Set(results.map((result) => result.item.id));
+  const registryItemsById = new Map(results.map((result) => [result.item.id, result.item]));
   const surfaceIds = new Set(
     results
       .filter((result) => result.item.type !== "recipe")
@@ -631,7 +647,7 @@ export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()):
   );
 
   for (const result of results) {
-    result.consistencyIssues.push(...collectRegistryReferenceIssues(result.item, registryIds));
+    result.consistencyIssues.push(...collectRegistryReferenceIssues(result.item, registryItemsById));
 
     if (result.manifest.exists) {
       const manifestPath = path.join(rootDir, result.item.manifestRef);
