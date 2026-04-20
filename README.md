@@ -70,3 +70,4 @@ All commands support `--json` for machine-readable output.
 - [Source Registry Contract](./docs/protocols/source-registry.md)
 - [CLI Workspace Contract](./docs/protocols/cli-workspace.md)
 - [Token Compilation Contract](./docs/protocols/token-compilation.md)
+- [H5 Primitive Contract](./docs/protocols/h5-primitives.md)
