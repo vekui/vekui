@@ -1,0 +1,38 @@
+{
+  "id": "recipes.pc.list-page.basic",
+  "name": "pc-list-page-basic",
+  "namespace": "recipes",
+  "platform": "pc",
+  "type": "recipe",
+  "sourcePackage": "@vekui/recipes",
+  "sourceExport": "pcListPageBasicRecipe",
+  "sourceFiles": [
+    "packages/recipes/src/pc-list-page-basic.ts"
+  ],
+  "manifestRef": "packages/recipes/fixtures/pc.list-page.basic.json",
+  "manifestId": "pc.list-page.basic",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": ["neutral.filter-bar"],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "compose",
+    "targets": ["src/recipes"],
+    "requiredDirectories": ["src/recipes"]
+  },
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "registryTags": ["recipe", "list-page", "table"],
+  "aiHints": {
+    "intentKeywords": ["list-page", "table-page", "index-page", "admin-list"],
+    "adaptationNotes": [
+      "Use this recipe when the page needs shared filtering above a dense results region.",
+      "Install the neutral filter bar first, then compose result and empty states around the main body region."
+    ],
+    "preferredRecipes": []
+  },
+  "hash": "recipes-pc-list-page-basic-v1"
+}

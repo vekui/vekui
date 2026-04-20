@@ -44,6 +44,17 @@
       "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
     },
     {
+      "name": "filter-bar-background",
+      "path": "component.neutral.filter-bar.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["shared"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "neutral.filter-bar",
+      "description": "Background surface token for the shared neutral filter bar block.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
+    },
+    {
       "name": "button-radius",
       "path": "component.pc.button.radius",
       "kind": "radius",
