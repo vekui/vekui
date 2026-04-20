@@ -55,8 +55,8 @@ export const pcListPageBasicRecipeSource: RecipeSourceArtifact = {
       "The main content region is a table, list, or empty state that can swap in place."
     ],
     extensionPoints: [
-      "Add neutral.data-summary-cards before the body region when quick KPI context matters.",
-      "Compose a table, list, or empty-state result block after neutral.filter-bar once your app is ready to define that result region."
+      "Insert app-specific result content after neutral.filter-bar once the project defines its own list or table block.",
+      "Add app-owned summary or bulk-action sections around the body region only after the shared filter bar is in place."
     ]
   }
 };

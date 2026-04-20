@@ -25,7 +25,7 @@
   "aiHints": {
     "intentKeywords": ["submit", "confirm", "primary-action"],
     "adaptationNotes": ["Prefer tone variants for semantic emphasis instead of ad-hoc color overrides."],
-    "preferredRecipes": ["pc.list-page.basic"]
+    "preferredRecipes": ["recipes.pc.list-page.basic"]
   },
   "hash": "pc-button-v1"
 }

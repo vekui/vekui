@@ -32,7 +32,7 @@
       "Use this block when a list or table needs persistent search and filtering before the result region.",
       "Keep the block neutral and reusable across page shells instead of baking in platform-specific header chrome."
     ],
-    "preferredRecipes": ["pc.list-page.basic"]
+    "preferredRecipes": ["recipes.pc.list-page.basic"]
   },
   "hash": "neutral-filter-bar-v2"
 }

@@ -7,10 +7,25 @@
       "target": "fill.surface"
     }
   ],
-  "variantMappings": [],
+  "variantMappings": [
+    {
+      "variant": "size",
+      "value": "sm",
+      "target": "layout.size.sm"
+    },
+    {
+      "variant": "size",
+      "value": "md",
+      "target": "layout.size.md"
+    },
+    {
+      "variant": "size",
+      "value": "lg",
+      "target": "layout.size.lg"
+    }
+  ],
   "slotMappings": [],
   "stateMappings": [],
   "assetRefs": [],
   "syncRules": ["Sync size variants to documented component options."]
 }
-

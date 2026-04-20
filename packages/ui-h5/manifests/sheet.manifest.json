@@ -51,7 +51,7 @@
     "doNotUseWhen": ["Long multi-step flows"]
   },
   "composition": {
-    "recommendedChildren": ["h5.list", "h5.button"]
+    "recommendedChildren": []
   },
   "designMappingRef": "packages/adapter-pencil/mappings/h5.sheet.mapping.json",
   "examples": [
@@ -60,4 +60,3 @@
     }
   ]
 }
-

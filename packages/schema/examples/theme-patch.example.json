@@ -12,7 +12,6 @@
   ],
   "reason": "Align primary actions with the default brand blue.",
   "previewHints": {
-    "highlightComponents": ["pc.button", "h5.button"]
+    "highlightComponents": ["pc.button"]
   }
 }
-

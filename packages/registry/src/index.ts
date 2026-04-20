@@ -186,39 +186,92 @@ function collectMappingConsistencyIssues(
   }
 
   const variantMappings = mappings.flatMap((mapping) => mapping.variantMappings);
+  const variantCoverage = new Map<string, Set<string>>();
 
-  if (variantMappings.length > 0) {
-    const variantCoverage = new Map<string, Set<string>>();
+  for (const mapping of variantMappings) {
+    const values = variantCoverage.get(mapping.variant) ?? new Set<string>();
+    values.add(mapping.value);
+    variantCoverage.set(mapping.variant, values);
+  }
 
-    for (const mapping of variantMappings) {
-      const values = variantCoverage.get(mapping.variant) ?? new Set<string>();
-      values.add(mapping.value);
-      variantCoverage.set(mapping.variant, values);
+  for (const variant of manifest.variants) {
+    const expectedValues =
+      variant.type === "enum"
+        ? (variant.values ?? [])
+        : variant.type === "boolean"
+          ? ["true", "false"]
+          : [];
+
+    if (expectedValues.length === 0) {
+      continue;
     }
 
-    for (const variant of manifest.variants) {
-      const expectedValues =
-        variant.type === "enum"
-          ? (variant.values ?? [])
-          : variant.type === "boolean"
-            ? ["true", "false"]
-            : [];
+    const mappedValues = variantCoverage.get(variant.name);
 
-      if (expectedValues.length === 0) {
-        continue;
+    if (!mappedValues) {
+      issues.push(`design mappings must cover manifest variant ${variant.name}.`);
+      continue;
+    }
+
+    for (const expectedValue of expectedValues) {
+      if (!mappedValues.has(expectedValue)) {
+        issues.push(`design mappings must cover variant ${variant.name} value ${expectedValue}.`);
       }
+    }
+  }
 
-      const mappedValues = variantCoverage.get(variant.name);
+  return issues;
+}
 
-      if (!mappedValues) {
-        issues.push(`design mappings define variantMappings but omit manifest variant ${variant.name}.`);
-        continue;
-      }
+function collectRegistryReferenceIssues(item: RegistryItem, registryIds: Set<string>): string[] {
+  const issues: string[] = [];
 
-      for (const expectedValue of expectedValues) {
-        if (!mappedValues.has(expectedValue)) {
-          issues.push(`design mappings must cover variant ${variant.name} value ${expectedValue}.`);
-        }
+  for (const dependencyRef of item.dependencyRefs) {
+    if (!registryIds.has(dependencyRef)) {
+      issues.push(`dependencyRef ${dependencyRef} was not found in the registry catalog.`);
+    }
+  }
+
+  for (const preferredRecipe of item.aiHints.preferredRecipes) {
+    if (!registryIds.has(preferredRecipe)) {
+      issues.push(`preferredRecipe ${preferredRecipe} was not found in the registry catalog.`);
+    }
+  }
+
+  return issues;
+}
+
+function collectComponentCatalogIssues(manifest: ComponentManifest, surfaceIds: Set<string>): string[] {
+  const issues: string[] = [];
+
+  for (const childId of manifest.composition.recommendedChildren) {
+    if (!surfaceIds.has(childId)) {
+      issues.push(`component manifest recommended child ${childId} was not found in the surface catalog.`);
+    }
+  }
+
+  return issues;
+}
+
+function collectRecipeCatalogIssues(manifest: RecipeDocument, surfaceIds: Set<string>): string[] {
+  const issues: string[] = [];
+
+  for (const requiredBlock of manifest.requiredBlocks) {
+    if (!surfaceIds.has(requiredBlock)) {
+      issues.push(`recipe requiredBlock ${requiredBlock} was not found in the surface catalog.`);
+    }
+  }
+
+  for (const optionalBlock of manifest.optionalBlocks) {
+    if (!surfaceIds.has(optionalBlock)) {
+      issues.push(`recipe optionalBlock ${optionalBlock} was not found in the surface catalog.`);
+    }
+  }
+
+  for (const region of manifest.regions) {
+    for (const acceptedSurface of region.accepts) {
+      if (!surfaceIds.has(acceptedSurface)) {
+        issues.push(`recipe region ${region.name} accepts missing surface ${acceptedSurface}.`);
       }
     }
   }
@@ -570,6 +623,36 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
 
 export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()): Promise<RegistryVerificationResult[]> {
   const results = await loadRegistryItems(rootDir);
+  const registryIds = new Set(results.map((result) => result.item.id));
+  const surfaceIds = new Set(
+    results
+      .filter((result) => result.item.type !== "recipe")
+      .map((result) => result.item.id)
+  );
+
+  for (const result of results) {
+    result.consistencyIssues.push(...collectRegistryReferenceIssues(result.item, registryIds));
+
+    if (result.manifest.exists) {
+      const manifestPath = path.join(rootDir, result.item.manifestRef);
+
+      if (result.item.type === "recipe") {
+        const manifestDocument = await readJsonFile<RecipeDocument>(manifestPath);
+        result.consistencyIssues.push(...collectRecipeCatalogIssues(manifestDocument, surfaceIds));
+      } else {
+        const manifestDocument = await readJsonFile<ComponentManifest>(manifestPath);
+        result.consistencyIssues.push(...collectComponentCatalogIssues(manifestDocument, surfaceIds));
+      }
+    }
+
+    result.valid =
+      result.manifest.exists &&
+      result.designMappings.every((reference) => reference.exists) &&
+      result.sourceFiles.every((reference) => reference.exists) &&
+      result.tokenRefs.every((reference) => reference.exists) &&
+      result.consistencyIssues.length === 0;
+  }
+
   const invalidResults = results.filter((result) => !result.valid);
 
   if (invalidResults.length > 0) {

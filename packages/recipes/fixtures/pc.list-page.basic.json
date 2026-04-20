@@ -4,17 +4,16 @@
   "intent": "list-page",
   "layout": "page-shell",
   "requiredBlocks": ["neutral.filter-bar"],
-  "optionalBlocks": ["neutral.data-summary-cards"],
+  "optionalBlocks": [],
   "regions": [
     {
       "name": "body",
-      "accepts": ["neutral.filter-bar", "pc.table-section"],
+      "accepts": ["neutral.filter-bar"],
       "required": true
     }
   ],
-  "layoutRules": ["Render filters before the table region."],
-  "interactionRules": ["Swap the table for empty state when data is absent."],
+  "layoutRules": ["Render neutral.filter-bar at the top of the body region before app-specific results."],
+  "interactionRules": ["Swap the app-specific result region for empty state when data is absent."],
   "recommendedTokens": ["semantic.color.action.primary"],
   "antiPatterns": ["Do not mix batch actions into the page header."]
 }
-
