@@ -2,6 +2,54 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vekui Design Mapping",
   "type": "object",
+  "$defs": {
+    "componentId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "tokenPath": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+$"
+    },
+    "binding": {
+      "type": "object",
+      "required": ["token", "target"],
+      "properties": {
+        "token": { "$ref": "#/$defs/tokenPath" },
+        "target": { "type": "string", "minLength": 3 },
+        "mode": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "variantMapping": {
+      "type": "object",
+      "required": ["variant", "value", "target"],
+      "properties": {
+        "variant": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "value": { "type": "string" },
+        "target": { "type": "string", "minLength": 2 }
+      },
+      "additionalProperties": false
+    },
+    "slotMapping": {
+      "type": "object",
+      "required": ["slot", "target"],
+      "properties": {
+        "slot": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "target": { "type": "string", "minLength": 2 }
+      },
+      "additionalProperties": false
+    },
+    "stateMapping": {
+      "type": "object",
+      "required": ["state", "target"],
+      "properties": {
+        "state": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "target": { "type": "string", "minLength": 2 }
+      },
+      "additionalProperties": false
+    }
+  },
   "required": [
     "componentId",
     "tool",
@@ -13,15 +61,14 @@
     "syncRules"
   ],
   "properties": {
-    "componentId": { "type": "string" },
-    "tool": { "type": "string" },
-    "tokenBindings": { "type": "array", "items": { "type": "object" } },
-    "variantMappings": { "type": "array", "items": { "type": "object" } },
-    "slotMappings": { "type": "array", "items": { "type": "object" } },
-    "stateMappings": { "type": "array", "items": { "type": "object" } },
+    "componentId": { "$ref": "#/$defs/componentId" },
+    "tool": { "type": "string", "enum": ["pencil", "figma"] },
+    "tokenBindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } },
+    "variantMappings": { "type": "array", "items": { "$ref": "#/$defs/variantMapping" } },
+    "slotMappings": { "type": "array", "items": { "$ref": "#/$defs/slotMapping" } },
+    "stateMappings": { "type": "array", "items": { "$ref": "#/$defs/stateMapping" } },
     "assetRefs": { "type": "array", "items": { "type": "string" } },
-    "syncRules": { "type": "array", "items": { "type": "string" } }
+    "syncRules": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
   },
   "additionalProperties": false
 }
-

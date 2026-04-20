@@ -2,34 +2,196 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vekui Registry Item",
   "type": "object",
+  "$defs": {
+    "registryId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral|recipes)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "packagePath": {
+      "type": "string",
+      "pattern": "^packages/.+\\.(ts|tsx|json)$"
+    },
+    "srcPath": {
+      "type": "string",
+      "pattern": "^src(?:/[a-z0-9-]+)+$"
+    },
+    "installMeta": {
+      "type": "object",
+      "required": ["strategy", "targets", "requiredDirectories"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["copy", "compose", "generate"]
+        },
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/srcPath" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "requiredDirectories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/srcPath" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "aiHints": {
+      "type": "object",
+      "required": ["intentKeywords", "adaptationNotes", "preferredRecipes"],
+      "properties": {
+        "intentKeywords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "adaptationNotes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "preferredRecipes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(pc|h5|neutral|recipes)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
   "required": [
+    "id",
     "name",
     "namespace",
     "platform",
     "type",
+    "sourcePackage",
+    "sourceExport",
     "sourceFiles",
     "manifestRef",
+    "manifestId",
     "tokenRefs",
     "dependencyRefs",
     "peerDependencyHints",
-    "installTargetHints",
+    "install",
     "compatibility",
+    "registryTags",
+    "aiHints",
     "hash"
   ],
   "properties": {
-    "name": { "type": "string" },
-    "namespace": { "type": "string" },
-    "platform": { "type": "string" },
-    "type": { "type": "string" },
-    "sourceFiles": { "type": "array", "items": { "type": "string" } },
-    "manifestRef": { "type": "string" },
-    "tokenRefs": { "type": "array", "items": { "type": "string" } },
-    "dependencyRefs": { "type": "array", "items": { "type": "string" } },
-    "peerDependencyHints": { "type": "array", "items": { "type": "string" } },
-    "installTargetHints": { "type": "array", "items": { "type": "string" } },
-    "compatibility": { "type": "object" },
-    "hash": { "type": "string" }
+    "id": { "$ref": "#/$defs/registryId" },
+    "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "namespace": { "type": "string", "enum": ["pc", "h5", "neutral", "recipes"] },
+    "platform": { "type": "string", "enum": ["pc", "h5", "shared"] },
+    "type": { "type": "string", "enum": ["component", "primitive", "block", "recipe"] },
+    "sourcePackage": {
+      "type": "string",
+      "pattern": "^@vekui/[a-z0-9-]+$"
+    },
+    "sourceExport": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+    },
+    "sourceFiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packagePath" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "manifestRef": { "$ref": "#/$defs/packagePath" },
+    "manifestId": { "$ref": "#/$defs/registryId" },
+    "tokenRefs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packagePath" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "dependencyRefs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/registryId" },
+      "uniqueItems": true
+    },
+    "peerDependencyHints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "install": { "$ref": "#/$defs/installMeta" },
+    "compatibility": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string" }
+    },
+    "registryTags": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "aiHints": { "$ref": "#/$defs/aiHints" },
+    "hash": { "type": "string", "minLength": 6 }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "namespace": { "const": "pc" }
+        },
+        "required": ["namespace"]
+      },
+      "then": {
+        "properties": {
+          "platform": { "const": "pc" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "namespace": { "const": "h5" }
+        },
+        "required": ["namespace"]
+      },
+      "then": {
+        "properties": {
+          "platform": { "const": "h5" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "namespace": { "const": "neutral" }
+        },
+        "required": ["namespace"]
+      },
+      "then": {
+        "properties": {
+          "platform": { "const": "shared" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "namespace": { "const": "recipes" }
+        },
+        "required": ["namespace"]
+      },
+      "then": {
+        "properties": {
+          "type": { "const": "recipe" }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
-

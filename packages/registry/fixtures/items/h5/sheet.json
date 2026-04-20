@@ -1,22 +1,35 @@
 {
+  "id": "h5.sheet",
   "name": "sheet",
   "namespace": "h5",
   "platform": "h5",
   "type": "component",
+  "sourcePackage": "@vekui/ui-h5",
+  "sourceExport": "h5SheetContract",
   "sourceFiles": [
     "packages/ui-h5/src/sheet.ts"
   ],
   "manifestRef": "packages/ui-h5/manifests/sheet.manifest.json",
+  "manifestId": "h5.sheet",
   "tokenRefs": [
     "packages/tokens/fixtures/default.tokens.json"
   ],
   "dependencyRefs": [],
-  "peerDependencyHints": ["react"],
-  "installTargetHints": ["src/components/mobile"],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/mobile"],
+    "requiredDirectories": ["src/components/mobile"]
+  },
   "compatibility": {
     "react": "^19.0.0",
     "tailwind": "^4.0.0"
   },
+  "registryTags": ["overlay", "mobile"],
+  "aiHints": {
+    "intentKeywords": ["sheet", "drawer", "quick-actions"],
+    "adaptationNotes": ["Prefer sheet for short contextual tasks and quick actions on touch-first surfaces."],
+    "preferredRecipes": []
+  },
   "hash": "h5-sheet-v1"
 }
-

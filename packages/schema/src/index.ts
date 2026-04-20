@@ -4,8 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { AnySchemaObject, ErrorObject } from "ajv";
-
-export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+import type { JsonValue } from "./contracts.js";
 
 export const schemaPackage = "@vekui/schema";
 
@@ -108,3 +107,22 @@ export async function validateExampleFixtures(rootDir = resolveWorkspaceRoot()):
 
   return results;
 }
+
+export type {
+  ComponentManifest,
+  DesignMapping,
+  JsonValue,
+  RecipeDocument,
+  RegistryAiHints,
+  RegistryInstallMeta,
+  RegistryItem,
+  RegistryItemType,
+  ThemePatch,
+  TokenDocument,
+  TokenEntry,
+  TokenExportTarget,
+  TokenKind,
+  TokenScope,
+  VekuiNamespace,
+  VekuiPlatform
+} from "./contracts.js";

@@ -2,28 +2,56 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vekui Theme Patch",
   "type": "object",
+  "$defs": {
+    "tokenPath": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+$"
+    },
+    "componentId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    }
+  },
   "required": ["id", "target", "platform", "scope", "ops", "reason", "previewHints"],
   "properties": {
-    "id": { "type": "string" },
-    "target": { "type": "string" },
-    "platform": { "type": "string" },
-    "scope": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+(?:\\.[a-z0-9-]+)*$" },
+    "target": { "type": "string", "enum": ["global", "component"] },
+    "platform": { "type": "string", "enum": ["pc", "h5", "shared"] },
+    "scope": { "type": "string", "enum": ["semantic", "component", "alias"] },
     "ops": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": ["action", "path"],
         "properties": {
           "action": { "type": "string", "enum": ["set", "unset", "alias"] },
-          "path": { "type": "string" },
+          "path": { "$ref": "#/$defs/tokenPath" },
           "value": {}
         },
         "additionalProperties": false
       }
     },
-    "reason": { "type": "string" },
-    "previewHints": { "type": "object" }
+    "reason": { "type": "string", "minLength": 12 },
+    "previewHints": {
+      "type": "object",
+      "properties": {
+        "highlightComponents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/componentId" },
+          "uniqueItems": true
+        },
+        "suggestedRecipes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(pc|h5|neutral|recipes)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }
-

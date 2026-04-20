@@ -79,7 +79,7 @@ function renderRegistryText(output: OutputStream, results: RegistryVerificationR
   for (const result of results) {
     writeLine(
       output,
-      `${result.item.platform}/${result.item.name} (${result.item.type}) -> ${result.item.manifestRef}`
+      `${result.item.id} (${result.item.type}) -> ${result.item.sourcePackage} -> ${result.item.install.targets.join(", ")}`
     );
   }
 }
@@ -157,11 +157,15 @@ export async function runCli(argv = process.argv.slice(2), runtime: CliRuntime =
           workspaceRoot: rootDir,
           summary: summarizeRegistry(results),
           items: results.map((result) => ({
+            id: result.item.id,
             name: result.item.name,
             namespace: result.item.namespace,
             platform: result.item.platform,
             type: result.item.type,
+            sourcePackage: result.item.sourcePackage,
+            sourceExport: result.item.sourceExport,
             manifestRef: result.item.manifestRef,
+            install: result.item.install,
             itemPath: result.itemPath
           }))
         });

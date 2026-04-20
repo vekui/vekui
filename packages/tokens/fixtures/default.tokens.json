@@ -9,6 +9,18 @@
       "scope": "semantic",
       "platforms": ["shared"],
       "value": "#1d4ed8",
+      "description": "Primary action color shared across PC and H5 surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+    },
+    {
+      "name": "button-background",
+      "path": "component.pc.button.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "aliasOf": "semantic.color.action.primary",
+      "component": "pc.button",
+      "description": "Resolved background token for the primary PC button.",
       "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
     },
     {
@@ -19,8 +31,19 @@
       "platforms": ["pc"],
       "value": "10px",
       "component": "pc.button",
+      "description": "Corner radius for the core PC button family.",
+      "exportTargets": ["css-vars", "tailwind"]
+    },
+    {
+      "name": "sheet-background",
+      "path": "component.h5.sheet.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "value": "#ffffff",
+      "component": "h5.sheet",
+      "description": "Background surface token for the mobile sheet primitive.",
       "exportTargets": ["css-vars", "tailwind"]
     }
   ]
 }
-

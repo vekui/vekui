@@ -1,25 +1,13 @@
 import path from "node:path";
-import { readJsonFile, resolveWorkspaceRoot, type JsonValue } from "../../schema/src/index.js";
+import {
+  readJsonFile,
+  resolveWorkspaceRoot,
+  type TokenDocument,
+  type TokenEntry,
+  type VekuiPlatform
+} from "../../schema/src/index.js";
 
 export const defaultTokenDocumentRelativePath = "packages/tokens/fixtures/default.tokens.json";
-
-export interface TokenEntry {
-  name: string;
-  path: string;
-  kind: string;
-  scope: string;
-  platforms: string[];
-  exportTargets: string[];
-  value?: JsonValue;
-  aliasOf?: string;
-  component?: string;
-}
-
-export interface TokenDocument {
-  name: string;
-  modes: string[];
-  tokens: TokenEntry[];
-}
 
 export interface TokenInspection {
   name: string;
@@ -47,7 +35,10 @@ export async function loadTokenDocument(filePath = resolveDefaultTokenDocumentPa
   return readJsonFile<TokenDocument>(filePath);
 }
 
-export function listTokensByPlatform(document: TokenDocument, platform: string): TokenEntry[] {
+export function listTokensByPlatform(
+  document: TokenDocument,
+  platform: VekuiPlatform | "neutral"
+): TokenEntry[] {
   return document.tokens.filter(
     (token) => token.platforms.includes(platform) || token.platforms.includes("shared")
   );

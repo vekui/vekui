@@ -58,3 +58,8 @@ corepack pnpm vekui tokens inspect
 - `vekui tokens inspect [token-document-path]`
 
 All commands support `--json` for machine-readable output.
+
+## Protocol Docs
+
+- [Schema Surfaces](./docs/protocols/schema-surfaces.md)
+- [Source Registry Contract](./docs/protocols/source-registry.md)
