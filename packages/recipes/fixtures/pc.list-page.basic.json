@@ -1,0 +1,20 @@
+{
+  "id": "pc.list-page.basic",
+  "platform": "pc",
+  "intent": "list-page",
+  "layout": "page-shell",
+  "requiredBlocks": ["neutral.filter-bar"],
+  "optionalBlocks": ["neutral.data-summary-cards"],
+  "regions": [
+    {
+      "name": "body",
+      "accepts": ["neutral.filter-bar", "pc.table-section"],
+      "required": true
+    }
+  ],
+  "layoutRules": ["Render filters before the table region."],
+  "interactionRules": ["Swap the table for empty state when data is absent."],
+  "recommendedTokens": ["semantic.color.action.primary"],
+  "antiPatterns": ["Do not mix batch actions into the page header."]
+}
+

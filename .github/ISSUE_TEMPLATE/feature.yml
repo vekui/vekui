@@ -1,0 +1,36 @@
+name: Feature Proposal
+description: Propose a feature for Veku.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or platform problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: input
+    id: area
+    attributes:
+      label: Affected area
+      placeholder: schema, tokens, registry, ui-pc, ui-h5, studio
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking change?
+      options:
+        - "no"
+        - "yes"
+

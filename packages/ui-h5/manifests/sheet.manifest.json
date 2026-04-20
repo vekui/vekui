@@ -1,0 +1,63 @@
+{
+  "id": "h5.sheet",
+  "platform": "h5",
+  "level": "core",
+  "category": "overlay",
+  "title": "Sheet",
+  "description": "A mobile-first bottom sheet for short tasks and contextual actions.",
+  "family": "sheet",
+  "status": "stable",
+  "slots": [
+    {
+      "name": "body",
+      "required": true
+    }
+  ],
+  "variants": [
+    {
+      "name": "size",
+      "type": "enum",
+      "values": ["sm", "md", "lg"],
+      "default": "md"
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onOpenChange",
+      "payload": {
+        "open": "boolean"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "dialog"
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.h5.sheet.background"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": ["Long multi-step flows"]
+  },
+  "composition": {
+    "recommendedChildren": ["h5.list", "h5.button"]
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/h5.sheet.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    }
+  ]
+}
+

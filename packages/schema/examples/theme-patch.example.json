@@ -1,0 +1,18 @@
+{
+  "id": "brand-blue.v1",
+  "target": "global",
+  "platform": "shared",
+  "scope": "semantic",
+  "ops": [
+    {
+      "action": "set",
+      "path": "semantic.color.action.primary",
+      "value": "#1d4ed8"
+    }
+  ],
+  "reason": "Align primary actions with the default brand blue.",
+  "previewHints": {
+    "highlightComponents": ["pc.button", "h5.button"]
+  }
+}
+

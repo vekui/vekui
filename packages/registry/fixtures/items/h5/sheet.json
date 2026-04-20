@@ -1,0 +1,22 @@
+{
+  "name": "sheet",
+  "namespace": "h5",
+  "platform": "h5",
+  "type": "component",
+  "sourceFiles": [
+    "packages/ui-h5/src/sheet.ts"
+  ],
+  "manifestRef": "packages/ui-h5/manifests/sheet.manifest.json",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react"],
+  "installTargetHints": ["src/components/mobile"],
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "hash": "h5-sheet-v1"
+}
+

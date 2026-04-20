@@ -1,0 +1,22 @@
+{
+  "name": "button",
+  "namespace": "pc",
+  "platform": "pc",
+  "type": "component",
+  "sourceFiles": [
+    "packages/ui-pc/src/button.ts"
+  ],
+  "manifestRef": "packages/ui-pc/manifests/button.manifest.json",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react"],
+  "installTargetHints": ["src/components/ui"],
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "hash": "pc-button-v1"
+}
+

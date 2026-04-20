@@ -1,0 +1,58 @@
+{
+  "id": "pc.button",
+  "platform": "pc",
+  "level": "core",
+  "category": "form",
+  "title": "Button",
+  "description": "A primary action button for PC interfaces.",
+  "family": "button",
+  "status": "stable",
+  "slots": [],
+  "variants": [
+    {
+      "name": "tone",
+      "type": "enum",
+      "values": ["primary", "secondary"],
+      "default": "primary"
+    }
+  ],
+  "states": [
+    {
+      "name": "disabled",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onPress",
+      "payload": {
+        "type": "mouse-or-keyboard"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "button"
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.pc.button.background"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": []
+  },
+  "composition": {
+    "recommendedChildren": []
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/pc.button.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    }
+  ]
+}
+

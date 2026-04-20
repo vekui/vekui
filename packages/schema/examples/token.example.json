@@ -1,0 +1,16 @@
+{
+  "name": "veku-default",
+  "modes": ["light", "dark"],
+  "tokens": [
+    {
+      "name": "action-primary",
+      "path": "semantic.color.action.primary",
+      "kind": "color",
+      "scope": "semantic",
+      "platforms": ["shared"],
+      "value": "#1d4ed8",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+    }
+  ]
+}
+

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veku Recipe",
+  "type": "object",
+  "required": [
+    "id",
+    "platform",
+    "intent",
+    "layout",
+    "requiredBlocks",
+    "optionalBlocks",
+    "regions",
+    "layoutRules",
+    "interactionRules",
+    "recommendedTokens",
+    "antiPatterns"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "platform": { "type": "string" },
+    "intent": { "type": "string" },
+    "layout": { "type": "string" },
+    "requiredBlocks": { "type": "array", "items": { "type": "string" } },
+    "optionalBlocks": { "type": "array", "items": { "type": "string" } },
+    "regions": { "type": "array", "items": { "type": "object" } },
+    "layoutRules": { "type": "array", "items": { "type": "string" } },
+    "interactionRules": { "type": "array", "items": { "type": "string" } },
+    "recommendedTokens": { "type": "array", "items": { "type": "string" } },
+    "antiPatterns": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
+

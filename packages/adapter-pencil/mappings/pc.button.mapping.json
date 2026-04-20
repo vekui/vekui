@@ -1,0 +1,16 @@
+{
+  "componentId": "pc.button",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.pc.button.background",
+      "target": "fill.primary"
+    }
+  ],
+  "variantMappings": [],
+  "slotMappings": [],
+  "stateMappings": [],
+  "assetRefs": [],
+  "syncRules": ["Preserve component and token ids across sync."]
+}
+

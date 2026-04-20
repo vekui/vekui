@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veku Registry Item",
+  "type": "object",
+  "required": [
+    "name",
+    "namespace",
+    "platform",
+    "type",
+    "sourceFiles",
+    "manifestRef",
+    "tokenRefs",
+    "dependencyRefs",
+    "peerDependencyHints",
+    "installTargetHints",
+    "compatibility",
+    "hash"
+  ],
+  "properties": {
+    "name": { "type": "string" },
+    "namespace": { "type": "string" },
+    "platform": { "type": "string" },
+    "type": { "type": "string" },
+    "sourceFiles": { "type": "array", "items": { "type": "string" } },
+    "manifestRef": { "type": "string" },
+    "tokenRefs": { "type": "array", "items": { "type": "string" } },
+    "dependencyRefs": { "type": "array", "items": { "type": "string" } },
+    "peerDependencyHints": { "type": "array", "items": { "type": "string" } },
+    "installTargetHints": { "type": "array", "items": { "type": "string" } },
+    "compatibility": { "type": "object" },
+    "hash": { "type": "string" }
+  },
+  "additionalProperties": false
+}
+

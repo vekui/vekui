@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "items": [
+    "packages/registry/fixtures/items/pc/button.json",
+    "packages/registry/fixtures/items/h5/sheet.json"
+  ]
+}
+

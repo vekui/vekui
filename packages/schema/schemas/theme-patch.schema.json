@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veku Theme Patch",
+  "type": "object",
+  "required": ["id", "target", "platform", "scope", "ops", "reason", "previewHints"],
+  "properties": {
+    "id": { "type": "string" },
+    "target": { "type": "string" },
+    "platform": { "type": "string" },
+    "scope": { "type": "string" },
+    "ops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "path"],
+        "properties": {
+          "action": { "type": "string", "enum": ["set", "unset", "alias"] },
+          "path": { "type": "string" },
+          "value": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "reason": { "type": "string" },
+    "previewHints": { "type": "object" }
+  },
+  "additionalProperties": false
+}
+

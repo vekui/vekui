@@ -1,0 +1,14 @@
+* @veku/core
+/packages/schema/ @veku/core
+/packages/tokens/ @veku/core
+/packages/registry/ @veku/core
+/packages/cli/ @veku/core
+/packages/primitives-pc/ @veku/maintainers
+/packages/primitives-h5/ @veku/maintainers
+/packages/ui-pc/ @veku/maintainers
+/packages/ui-h5/ @veku/maintainers
+/packages/adapter-pencil/ @veku/maintainers
+/packages/adapter-figma/ @veku/maintainers
+/apps/studio/ @veku/maintainers
+/.github/ @veku/core
+

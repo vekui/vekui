@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veku Design Mapping",
+  "type": "object",
+  "required": [
+    "componentId",
+    "tool",
+    "tokenBindings",
+    "variantMappings",
+    "slotMappings",
+    "stateMappings",
+    "assetRefs",
+    "syncRules"
+  ],
+  "properties": {
+    "componentId": { "type": "string" },
+    "tool": { "type": "string" },
+    "tokenBindings": { "type": "array", "items": { "type": "object" } },
+    "variantMappings": { "type": "array", "items": { "type": "object" } },
+    "slotMappings": { "type": "array", "items": { "type": "object" } },
+    "stateMappings": { "type": "array", "items": { "type": "object" } },
+    "assetRefs": { "type": "array", "items": { "type": "string" } },
+    "syncRules": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
+

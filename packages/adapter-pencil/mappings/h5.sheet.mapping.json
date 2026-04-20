@@ -1,0 +1,16 @@
+{
+  "componentId": "h5.sheet",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.h5.sheet.background",
+      "target": "fill.surface"
+    }
+  ],
+  "variantMappings": [],
+  "slotMappings": [],
+  "stateMappings": [],
+  "assetRefs": [],
+  "syncRules": ["Sync size variants to documented component options."]
+}
+

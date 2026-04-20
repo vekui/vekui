@@ -1,0 +1,15 @@
+{
+  "componentId": "pc.button",
+  "tool": "figma",
+  "tokenBindings": [
+    {
+      "token": "component.pc.button.background",
+      "target": "variables.fill.primary"
+    }
+  ],
+  "variantMappings": [],
+  "slotMappings": [],
+  "stateMappings": [],
+  "assetRefs": [],
+  "syncRules": ["Map tone variants to component properties."]
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Veku Component Manifest",
+  "type": "object",
+  "required": [
+    "id",
+    "platform",
+    "level",
+    "category",
+    "title",
+    "description",
+    "family",
+    "status",
+    "slots",
+    "variants",
+    "states",
+    "events",
+    "a11y",
+    "tokenContract",
+    "constraints",
+    "composition",
+    "designMappingRef",
+    "examples"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "platform": { "type": "string" },
+    "level": { "type": "string" },
+    "category": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "family": { "type": "string" },
+    "status": { "type": "string" },
+    "slots": { "type": "array", "items": { "type": "object" } },
+    "variants": { "type": "array", "items": { "type": "object" } },
+    "states": { "type": "array", "items": { "type": "object" } },
+    "events": { "type": "array", "items": { "type": "object" } },
+    "a11y": { "type": "object" },
+    "tokenContract": { "type": "object" },
+    "constraints": { "type": "object" },
+    "composition": { "type": "object" },
+    "designMappingRef": { "type": "string" },
+    "examples": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": false
+}
+

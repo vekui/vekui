@@ -1,0 +1,43 @@
+name: Component or Block Request
+description: Request a new component, block, or recipe.
+title: "[Component]: "
+labels:
+  - component-request
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - pc
+        - h5
+        - shared
+    validations:
+      required: true
+  - type: input
+    id: kind
+    attributes:
+      label: Component or block type
+      placeholder: button, picker, bottom-action-bar, list-page
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: Expected API shape
+      description: Describe slots, variants, states, and events.
+  - type: textarea
+    id: tokens
+    attributes:
+      label: Token needs
+      description: Which global or component-level token groups should be exposed?
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility notes
+  - type: textarea
+    id: adapter
+    attributes:
+      label: Design tool mapping
+      description: Pencil or Figma mapping requirements.
+
