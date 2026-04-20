@@ -11,7 +11,7 @@ Vekui H5 primitives borrow Radix-style composition boundaries, but the interacti
 - `sheet`
   Bottom-oriented overlay with snap points, drag-to-dismiss, and keyboard avoidance.
 - `picker`
-  Sheet-backed or inline selection surface with wheel visibility and confirmation behavior.
+  Sheet-backed selection surface with wheel visibility and confirmation behavior.
 
 ## H5-First Defaults
 

@@ -9,16 +9,6 @@
   ],
   "variantMappings": [
     {
-      "variant": "presentation",
-      "value": "sheet",
-      "target": "layout.presentation.sheet"
-    },
-    {
-      "variant": "presentation",
-      "value": "inline",
-      "target": "layout.presentation.inline"
-    },
-    {
       "variant": "columns",
       "value": "single",
       "target": "content.columns.single"
@@ -55,7 +45,6 @@
   ],
   "assetRefs": [],
   "syncRules": [
-    "Map picker presentation to either sheet or inline layout without changing option semantics.",
     "Keep column topology aligned with the columns variant so cascading data stays explicit."
   ]
 }

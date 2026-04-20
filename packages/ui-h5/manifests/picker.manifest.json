@@ -4,7 +4,7 @@
   "level": "composite",
   "category": "selection",
   "title": "Picker",
-  "description": "A mobile wheel picker for bounded option sets with sheet and inline presentations.",
+  "description": "A mobile wheel picker presented in a bottom sheet for bounded option sets.",
   "family": "picker",
   "status": "experimental",
   "slots": [
@@ -22,12 +22,6 @@
     }
   ],
   "variants": [
-    {
-      "name": "presentation",
-      "type": "enum",
-      "values": ["sheet", "inline"],
-      "default": "sheet"
-    },
     {
       "name": "columns",
       "type": "enum",
@@ -87,7 +81,7 @@
       "name": "basic"
     },
     {
-      "name": "inline"
+      "name": "cascading"
     }
   ]
 }
