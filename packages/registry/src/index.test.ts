@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile, cp } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile, cp, mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -24,6 +24,12 @@ async function updateJsonFile<T extends object>(
   const current = JSON.parse(await readFile(filePath, "utf8")) as T;
   const next = updater(current);
   await writeFile(filePath, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+}
+
+async function writeJsonFile<T extends object>(rootDir: string, relativePath: string, payload: T): Promise<void> {
+  const filePath = path.join(rootDir, relativePath);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
 test("assertRegistryIntegrity accepts app-owned recipe result surfaces", async () => {
@@ -80,6 +86,39 @@ test("assertRegistryIntegrity rejects preferredRecipes that are not recipe regis
       () => assertRegistryIntegrity(workspaceRoot),
       /preferredRecipe pc\.button/
     );
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test("assertRegistryIntegrity rejects duplicate registry ids with conflicting item paths", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    const duplicateItemPath = "packages/registry/fixtures/items/pc/button-copy.json";
+    const originalItem = JSON.parse(
+      await readFile(
+        path.join(workspaceRoot, "packages/registry/fixtures/items/pc/button.json"),
+        "utf8"
+      )
+    ) as RegistryItem;
+
+    await writeJsonFile(workspaceRoot, duplicateItemPath, originalItem);
+    await updateJsonFile<{ version: number; items: string[] }>(
+      workspaceRoot,
+      "packages/registry/fixtures/index.json",
+      (index) => ({
+        ...index,
+        items: [...index.items, duplicateItemPath]
+      })
+    );
+
+    await assert.rejects(() => assertRegistryIntegrity(workspaceRoot), (error: unknown) => {
+      assert.match(String(error), /Duplicate registry id pc\.button/);
+      assert.match(String(error), /packages\/registry\/fixtures\/items\/pc\/button\.json/);
+      assert.match(String(error), /packages\/registry\/fixtures\/items\/pc\/button-copy\.json/);
+      return true;
+    });
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }

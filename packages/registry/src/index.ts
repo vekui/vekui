@@ -58,6 +58,30 @@ function isAppOwnedSurfaceId(value: string): boolean {
   return appOwnedSurfaceIdPattern.test(value);
 }
 
+function formatDuplicateRegistryIdError(results: RegistryVerificationResult[]): string | null {
+  const itemPathsById = new Map<string, string[]>();
+
+  for (const result of results) {
+    const existingPaths = itemPathsById.get(result.item.id) ?? [];
+    existingPaths.push(result.itemPath);
+    itemPathsById.set(result.item.id, existingPaths);
+  }
+
+  const duplicateSections = [...itemPathsById.entries()]
+    .filter(([, itemPaths]) => itemPaths.length > 1)
+    .map(([registryId, itemPaths]) => {
+      const uniquePaths = [...new Set(itemPaths)].sort((left, right) => left.localeCompare(right));
+      const pathLines = uniquePaths.map((itemPath) => `- ${itemPath}`).join("\n");
+      return `Duplicate registry id ${registryId} found in:\n${pathLines}`;
+    });
+
+  if (duplicateSections.length === 0) {
+    return null;
+  }
+
+  return duplicateSections.join("\n\n");
+}
+
 async function checkRelativePath(rootDir: string, relativePath: string): Promise<RegistryRefCheck> {
   try {
     await access(path.join(rootDir, relativePath));
@@ -639,6 +663,12 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
 
 export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()): Promise<RegistryVerificationResult[]> {
   const results = await loadRegistryItems(rootDir);
+  const duplicateRegistryIdError = formatDuplicateRegistryIdError(results);
+
+  if (duplicateRegistryIdError) {
+    throw new Error(duplicateRegistryIdError);
+  }
+
   const registryItemsById = new Map(results.map((result) => [result.item.id, result.item]));
   const surfaceIds = new Set(
     results
@@ -683,7 +713,14 @@ export async function resolveRegistryItem(
   rootDir = resolveWorkspaceRoot()
 ): Promise<RegistryVerificationResult> {
   const results = await assertRegistryIntegrity(rootDir);
-  const match = results.find((result) => result.item.id === registryId);
+  const matches = results.filter((result) => result.item.id === registryId);
+
+  if (matches.length > 1) {
+    const itemPaths = matches.map((result) => result.itemPath).join(", ");
+    throw new Error(`Ambiguous registry item ${registryId}: ${itemPaths}`);
+  }
+
+  const [match] = matches;
 
   if (!match) {
     throw new Error(`Unknown registry item: ${registryId}`);
