@@ -373,12 +373,13 @@ function compileTailwind(tokens: ResolvedTokenEntry[]): CompiledTailwindOutput {
 
 function compileDesignToolTokens(
   tokens: ResolvedTokenEntry[],
+  modes: string[],
   target: Extract<TokenExportTarget, "pencil" | "figma">
 ): CompiledDesignTokenOutput[] {
   return tokens
     .filter((entry) => entry.exportTargets.includes(target))
     .flatMap((token) =>
-      ["light", "dark"].map((mode) => ({
+      modes.map((mode) => ({
         collection: "vekui-default",
         mode,
         name: token.name,
@@ -394,11 +395,11 @@ export function compileTokenDocument(document: TokenDocument): CompiledTokenOutp
   return {
     cssVars: compileCssVars(resolvedTokens, document.modes),
     tailwind: compileTailwind(resolvedTokens),
-    pencil: compileDesignToolTokens(resolvedTokens, "pencil").map((entry) => ({
+    pencil: compileDesignToolTokens(resolvedTokens, document.modes, "pencil").map((entry) => ({
       ...entry,
       collection: document.name
     })),
-    figma: compileDesignToolTokens(resolvedTokens, "figma").map((entry) => ({
+    figma: compileDesignToolTokens(resolvedTokens, document.modes, "figma").map((entry) => ({
       ...entry,
       collection: document.name
     })),
