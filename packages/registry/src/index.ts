@@ -348,6 +348,20 @@ export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()):
   return results;
 }
 
+export async function resolveRegistryItem(
+  registryId: string,
+  rootDir = resolveWorkspaceRoot()
+): Promise<RegistryVerificationResult> {
+  const results = await assertRegistryIntegrity(rootDir);
+  const match = results.find((result) => result.item.id === registryId);
+
+  if (!match) {
+    throw new Error(`Unknown registry item: ${registryId}`);
+  }
+
+  return match;
+}
+
 export function summarizeRegistry(results: RegistryVerificationResult[]): RegistrySummary {
   const namespaces: Record<string, number> = {};
   const platforms: Record<string, number> = {};

@@ -51,11 +51,16 @@ corepack pnpm vekui tokens inspect
 
 ## Current CLI Surface
 
+- `vekui init [pc|h5]`
+- `vekui add <registry-id>`
 - `vekui validate`
 - `vekui validate schema`
 - `vekui validate registry`
 - `vekui registry list`
 - `vekui tokens inspect [token-document-path]`
+- `vekui theme apply <theme-patch-path>`
+- `vekui theme export [token-document-path]`
+- `vekui sync pencil <registry-id>`
 
 All commands support `--json` for machine-readable output.
 
@@ -63,3 +68,4 @@ All commands support `--json` for machine-readable output.
 
 - [Schema Surfaces](./docs/protocols/schema-surfaces.md)
 - [Source Registry Contract](./docs/protocols/source-registry.md)
+- [CLI Workspace Contract](./docs/protocols/cli-workspace.md)
