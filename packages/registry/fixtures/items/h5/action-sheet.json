@@ -1,0 +1,38 @@
+{
+  "id": "h5.action-sheet",
+  "name": "action-sheet",
+  "namespace": "h5",
+  "platform": "h5",
+  "type": "component",
+  "sourcePackage": "@vekui/ui-h5",
+  "sourceExport": "h5ActionSheetContract",
+  "sourceFiles": [
+    "packages/ui-h5/src/action-sheet.ts"
+  ],
+  "manifestRef": "packages/ui-h5/manifests/action-sheet.manifest.json",
+  "manifestId": "h5.action-sheet",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/mobile"],
+    "requiredDirectories": ["src/components/mobile"]
+  },
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "registryTags": ["overlay", "mobile", "actions"],
+  "aiHints": {
+    "intentKeywords": ["action-sheet", "quick-actions", "destructive-confirm"],
+    "adaptationNotes": [
+      "Prefer an action sheet when the user needs 2-6 short touch targets from the current context.",
+      "Keep cancel isolated when muscle memory and accidental taps are a concern."
+    ],
+    "preferredRecipes": []
+  },
+  "hash": "h5-action-sheet-v1"
+}

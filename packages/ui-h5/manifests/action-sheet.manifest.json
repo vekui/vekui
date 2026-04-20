@@ -1,0 +1,97 @@
+{
+  "id": "h5.action-sheet",
+  "platform": "h5",
+  "level": "composite",
+  "category": "overlay",
+  "title": "Action Sheet",
+  "description": "A touch-first action chooser that stacks short commands and an isolated cancel affordance.",
+  "family": "action-sheet",
+  "status": "experimental",
+  "slots": [
+    {
+      "name": "title",
+      "required": false
+    },
+    {
+      "name": "description",
+      "required": false
+    },
+    {
+      "name": "actions",
+      "required": true
+    },
+    {
+      "name": "cancel-action",
+      "required": false
+    }
+  ],
+  "variants": [
+    {
+      "name": "size",
+      "type": "enum",
+      "values": ["compact", "comfortable"],
+      "default": "comfortable"
+    },
+    {
+      "name": "cancel-action-placement",
+      "type": "enum",
+      "values": ["separate-row", "inline-tail"],
+      "default": "separate-row"
+    },
+    {
+      "name": "emphasize-destructive-action",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onOpenChange",
+      "payload": {
+        "open": "boolean"
+      }
+    },
+    {
+      "name": "onActionSelect",
+      "payload": {
+        "actionKey": "string"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "dialog"
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.h5.action-sheet.background"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": [
+      "The action list requires search, filtering, or long-form descriptions.",
+      "The flow needs inline form controls or multi-step confirmation."
+    ]
+  },
+  "composition": {
+    "recommendedChildren": []
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/h5.action-sheet.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    },
+    {
+      "name": "destructive"
+    }
+  ]
+}

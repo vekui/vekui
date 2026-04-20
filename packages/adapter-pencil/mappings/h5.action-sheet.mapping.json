@@ -1,0 +1,56 @@
+{
+  "componentId": "h5.action-sheet",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.h5.action-sheet.background",
+      "target": "fill.surface"
+    }
+  ],
+  "variantMappings": [
+    {
+      "variant": "cancel-action-placement",
+      "value": "separate-row",
+      "target": "layout.cancel.separate-row"
+    },
+    {
+      "variant": "cancel-action-placement",
+      "value": "inline-tail",
+      "target": "layout.cancel.inline-tail"
+    },
+    {
+      "variant": "emphasize-destructive-action",
+      "value": "true",
+      "target": "style.action.destructive"
+    }
+  ],
+  "slotMappings": [
+    {
+      "slot": "title",
+      "target": "content.title"
+    },
+    {
+      "slot": "description",
+      "target": "content.description"
+    },
+    {
+      "slot": "actions",
+      "target": "content.actions"
+    },
+    {
+      "slot": "cancel-action",
+      "target": "content.cancel"
+    }
+  ],
+  "stateMappings": [
+    {
+      "state": "open",
+      "target": "state.open"
+    }
+  ],
+  "assetRefs": [],
+  "syncRules": [
+    "Keep cancel placement aligned with the documented variant values.",
+    "Preserve the destructive emphasis rule as a semantic action style, not a hard-coded color."
+  ]
+}

@@ -64,6 +64,28 @@
       "component": "h5.sheet",
       "description": "Background surface token for the mobile sheet primitive.",
       "exportTargets": ["css-vars", "tailwind", "json"]
+    },
+    {
+      "name": "action-sheet-background",
+      "path": "component.h5.action-sheet.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "h5.action-sheet",
+      "description": "Background surface token for mobile action sheets and short contextual menus.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
+    },
+    {
+      "name": "picker-background",
+      "path": "component.h5.picker.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "h5.picker",
+      "description": "Background surface token for touch-first wheel picker surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
     }
   ]
 }
