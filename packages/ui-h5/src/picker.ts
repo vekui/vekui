@@ -5,14 +5,14 @@ import {
 } from "../../primitives-h5/src/index.js";
 
 export interface H5PickerContract {
+  presentation: "sheet" | "inline";
   columns: "single" | "cascading";
-  valueCommit: "confirm" | "select-immediately";
   primitive: H5PickerRootContract;
 }
 
 export const h5PickerContract: H5PickerContract = {
+  presentation: "sheet",
   columns: "single",
-  valueCommit: "confirm",
   primitive: createH5PickerRootContract({
     presentation: "sheet",
     visibleOptionCount: 5,
