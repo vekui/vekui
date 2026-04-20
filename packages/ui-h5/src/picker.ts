@@ -10,18 +10,32 @@ export interface H5PickerContract {
   primitive: H5PickerRootContract;
 }
 
-export const h5PickerContract: H5PickerContract = {
+const defaultH5PickerSurface = {
   presentation: "sheet",
-  columns: "single",
-  primitive: createH5PickerRootContract({
-    presentation: "sheet",
+  columns: "single"
+} as const satisfies Pick<H5PickerContract, "presentation" | "columns">;
+
+function createDerivedH5PickerPrimitive(
+  contract: Pick<H5PickerContract, "presentation">
+): H5PickerRootContract {
+  return createH5PickerRootContract({
+    presentation: contract.presentation,
     visibleOptionCount: 5,
     confirmOnSelect: false,
-    surface: createH5SheetRootContract({
-      snapPoints: ["320px", "420px"],
-      defaultSnapPoint: "420px",
-      showDragHandle: false,
-      keyboardAvoidance: "safe-area-offset"
-    })
-  })
+    surface:
+      contract.presentation === "sheet"
+        ? createH5SheetRootContract({
+            snapPoints: ["320px", "420px"],
+            defaultSnapPoint: "420px",
+            showDragHandle: false,
+            keyboardAvoidance: "safe-area-offset"
+          })
+        : null
+  });
+}
+
+export const h5PickerContract: H5PickerContract = {
+  presentation: defaultH5PickerSurface.presentation,
+  columns: defaultH5PickerSurface.columns,
+  primitive: createDerivedH5PickerPrimitive(defaultH5PickerSurface)
 };

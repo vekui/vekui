@@ -9,6 +9,16 @@
   ],
   "variantMappings": [
     {
+      "variant": "size",
+      "value": "compact",
+      "target": "layout.size.compact"
+    },
+    {
+      "variant": "size",
+      "value": "comfortable",
+      "target": "layout.size.comfortable"
+    },
+    {
       "variant": "cancel-action-placement",
       "value": "separate-row",
       "target": "layout.cancel.separate-row"
@@ -22,6 +32,11 @@
       "variant": "emphasize-destructive-action",
       "value": "true",
       "target": "style.action.destructive"
+    },
+    {
+      "variant": "emphasize-destructive-action",
+      "value": "false",
+      "target": "style.action.standard"
     }
   ],
   "slotMappings": [

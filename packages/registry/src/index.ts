@@ -1,5 +1,6 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
+import ts from "typescript";
 import { assertTokenDocumentSemantics } from "../../tokens/src/index.js";
 import {
   readJsonFile,
@@ -184,6 +185,230 @@ function collectMappingConsistencyIssues(
     issues.push("component-like registry items should expose at least one design token binding.");
   }
 
+  const variantMappings = mappings.flatMap((mapping) => mapping.variantMappings);
+
+  if (variantMappings.length > 0) {
+    const variantCoverage = new Map<string, Set<string>>();
+
+    for (const mapping of variantMappings) {
+      const values = variantCoverage.get(mapping.variant) ?? new Set<string>();
+      values.add(mapping.value);
+      variantCoverage.set(mapping.variant, values);
+    }
+
+    for (const variant of manifest.variants) {
+      const expectedValues =
+        variant.type === "enum"
+          ? (variant.values ?? [])
+          : variant.type === "boolean"
+            ? ["true", "false"]
+            : [];
+
+      if (expectedValues.length === 0) {
+        continue;
+      }
+
+      const mappedValues = variantCoverage.get(variant.name);
+
+      if (!mappedValues) {
+        issues.push(`design mappings define variantMappings but omit manifest variant ${variant.name}.`);
+        continue;
+      }
+
+      for (const expectedValue of expectedValues) {
+        if (!mappedValues.has(expectedValue)) {
+          issues.push(`design mappings must cover variant ${variant.name} value ${expectedValue}.`);
+        }
+      }
+    }
+  }
+
+  return issues;
+}
+
+interface SourceExportSurface {
+  filePath: string;
+  found: boolean;
+  inspectable: boolean;
+  topLevelKeys: string[];
+}
+
+function hasExportModifier(node: ts.Node): boolean {
+  if (!ts.canHaveModifiers(node)) {
+    return false;
+  }
+
+  return ts.getModifiers(node)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+}
+
+function resolvePropertyName(name: ts.PropertyName): string | null {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
+    return name.text;
+  }
+
+  return null;
+}
+
+function collectObjectLiteralKeys(initializer: ts.ObjectLiteralExpression): string[] {
+  const keys: string[] = [];
+
+  for (const property of initializer.properties) {
+    if (
+      ts.isPropertyAssignment(property) ||
+      ts.isShorthandPropertyAssignment(property) ||
+      ts.isMethodDeclaration(property) ||
+      ts.isGetAccessorDeclaration(property) ||
+      ts.isSetAccessorDeclaration(property)
+    ) {
+      const key = resolvePropertyName(property.name);
+
+      if (key) {
+        keys.push(key);
+      }
+    }
+  }
+
+  return keys;
+}
+
+function inspectSourceExportSurface(sourceText: string, filePath: string, exportName: string): SourceExportSurface {
+  const scriptKind = filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true, scriptKind);
+  const localObjectExports = new Map<string, ts.ObjectLiteralExpression | null>();
+  const exportedBindings = new Map<string, string>();
+
+  for (const statement of sourceFile.statements) {
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (!ts.isIdentifier(declaration.name)) {
+          continue;
+        }
+
+        const localName = declaration.name.text;
+        localObjectExports.set(
+          localName,
+          declaration.initializer && ts.isObjectLiteralExpression(declaration.initializer)
+            ? declaration.initializer
+            : null
+        );
+
+        if (hasExportModifier(statement)) {
+          exportedBindings.set(localName, localName);
+        }
+      }
+    }
+
+    if (
+      ts.isFunctionDeclaration(statement) &&
+      statement.name &&
+      hasExportModifier(statement)
+    ) {
+      exportedBindings.set(statement.name.text, statement.name.text);
+    }
+
+    if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause) &&
+      !statement.moduleSpecifier
+    ) {
+      for (const element of statement.exportClause.elements) {
+        const exportedName = element.name.text;
+        const localName = (element.propertyName ?? element.name).text;
+        exportedBindings.set(exportedName, localName);
+      }
+    }
+  }
+
+  const localName = exportedBindings.get(exportName);
+
+  if (!localName) {
+    return {
+      filePath,
+      found: false,
+      inspectable: false,
+      topLevelKeys: []
+    };
+  }
+
+  const objectLiteral = localObjectExports.get(localName);
+
+  if (!objectLiteral) {
+    return {
+      filePath,
+      found: true,
+      inspectable: false,
+      topLevelKeys: []
+    };
+  }
+
+  return {
+    filePath,
+    found: true,
+    inspectable: true,
+    topLevelKeys: collectObjectLiteralKeys(objectLiteral)
+  };
+}
+
+async function resolveSourceExportSurface(
+  item: RegistryItem,
+  rootDir: string
+): Promise<SourceExportSurface | null> {
+  for (const relativePath of item.sourceFiles) {
+    const absolutePath = path.join(rootDir, relativePath);
+
+    let sourceText: string;
+
+    try {
+      sourceText = await readFile(absolutePath, "utf8");
+    } catch {
+      continue;
+    }
+
+    const inspection = inspectSourceExportSurface(sourceText, relativePath, item.sourceExport);
+
+    if (inspection.found) {
+      return inspection;
+    }
+  }
+
+  return null;
+}
+
+function toCamelCase(value: string): string {
+  return value.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase());
+}
+
+async function collectSourceExportIssues(
+  item: RegistryItem,
+  manifest: ComponentManifest,
+  rootDir: string
+): Promise<string[]> {
+  const inspection = await resolveSourceExportSurface(item, rootDir);
+
+  if (!inspection) {
+    return [`sourceExport ${item.sourceExport} was not found in the declared sourceFiles.`];
+  }
+
+  if (!inspection.inspectable) {
+    return [
+      `sourceExport ${item.sourceExport} in ${inspection.filePath} must resolve to an exported object literal contract.`
+    ];
+  }
+
+  const issues: string[] = [];
+  const topLevelKeys = new Set(inspection.topLevelKeys);
+
+  for (const variant of manifest.variants) {
+    const expectedKey = toCamelCase(variant.name);
+
+    if (!topLevelKeys.has(expectedKey)) {
+      issues.push(
+        `sourceExport ${item.sourceExport} in ${inspection.filePath} must expose top-level key ${expectedKey} for manifest variant ${variant.name}.`
+      );
+    }
+  }
+
   return issues;
 }
 
@@ -296,7 +521,10 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
           consistencyIssues.push(...collectManifestConsistencyIssues(item, manifestDocument));
         } else {
           const manifestDocument = await readJsonFile<ComponentManifest>(manifestPath);
-          consistencyIssues.push(...collectManifestConsistencyIssues(item, manifestDocument));
+          consistencyIssues.push(
+            ...collectManifestConsistencyIssues(item, manifestDocument),
+            ...(await collectSourceExportIssues(item, manifestDocument, rootDir))
+          );
 
           const mappingRef = await checkRelativePath(rootDir, manifestDocument.designMappingRef);
           designMappings.push(mappingRef);
