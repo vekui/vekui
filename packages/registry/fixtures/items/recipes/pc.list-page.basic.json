@@ -30,9 +30,9 @@
     "intentKeywords": ["list-page", "table-page", "index-page", "admin-list"],
     "adaptationNotes": [
       "Use this recipe when the page needs shared filtering above a dense results region.",
-      "Install the neutral filter bar first, then compose result and empty states around the main body region."
+      "Install the neutral filter bar first, then compose your app's table, list, or empty-state result region inside the body."
     ],
     "preferredRecipes": []
   },
-  "hash": "recipes-pc-list-page-basic-v2"
+  "hash": "recipes-pc-list-page-basic-v3"
 }

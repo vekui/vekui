@@ -34,12 +34,12 @@ export const pcListPageBasicRecipeSource: RecipeSourceArtifact = {
   assembly: {
     installStrategy: "compose",
     installTarget: "src/recipes",
-    dependencyOrder: ["neutral.filter-bar", "pc.table-section"],
+    dependencyOrder: ["neutral.filter-bar"],
     regionSequence: pcListPageBasicRecipe.regions.map((region) => region.name),
     defaultComposition: [
       {
         region: "body",
-        children: ["neutral.filter-bar", "pc.table-section"]
+        children: ["neutral.filter-bar"]
       }
     ]
   },
@@ -56,7 +56,7 @@ export const pcListPageBasicRecipeSource: RecipeSourceArtifact = {
     ],
     extensionPoints: [
       "Add neutral.data-summary-cards before the body region when quick KPI context matters.",
-      "Replace pc.table-section with another dense result block while keeping the filter bar first."
+      "Compose a table, list, or empty-state result block after neutral.filter-bar once your app is ready to define that result region."
     ]
   }
 };
