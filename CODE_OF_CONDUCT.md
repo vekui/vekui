@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We are committed to making participation in the Veku community a harassment-free experience for everyone.
+We are committed to making participation in the Vekui community a harassment-free experience for everyone.
 
 ## Our Standards
 

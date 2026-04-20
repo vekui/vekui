@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a defect in Veku.
+description: Report a defect in Vekui.
 title: "[Bug]: "
 labels:
   - bug
@@ -15,7 +15,7 @@ body:
     id: package
     attributes:
       label: Affected package
-      placeholder: "@veku/schema"
+      placeholder: "@vekui/schema"
   - type: textarea
     id: expected
     attributes:

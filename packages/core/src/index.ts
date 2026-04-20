@@ -1,3 +1,2 @@
-export const VEKU_NAME = "Veku";
-export const VEKU_TAGLINE = "Build UI systems AI can understand.";
-
+export const VEKUI_NAME = "Vekui";
+export const VEKUI_TAGLINE = "Build UI systems AI can understand.";

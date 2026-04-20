@@ -1,6 +1,6 @@
 # GitHub Organization Bootstrap
 
-The `veku` GitHub organization must be created manually in the GitHub web UI.
+The `vekui` GitHub organization must be created manually in the GitHub web UI.
 
 ## Required Organization Defaults
 
@@ -17,7 +17,7 @@ The `veku` GitHub organization must be created manually in the GitHub web UI.
 
 ## Repository Defaults
 
-- Repository: `veku`
+- Repository: `vekui`
 - Default branch: `main`
 - Merge strategy: squash only
 - Auto-delete branches: enabled

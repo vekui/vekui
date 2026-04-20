@@ -1,2 +1,2 @@
-export const uiH5Package = "@veku/ui-h5";
+export const uiH5Package = "@vekui/ui-h5";
 

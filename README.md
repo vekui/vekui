@@ -1,12 +1,12 @@
-# Veku
+# Vekui
 
 > Build UI systems AI can understand.
 
-Veku is a source-first UI system for PC and H5, built for AI-driven design and assembly.
+Vekui is a source-first UI system for PC and H5, built for AI-driven design and assembly.
 
-## Why Veku
+## Why Vekui
 
-Veku is not a traditional UI library. It is designed to make UI assets understandable by both humans and AI systems.
+Vekui is not a traditional UI library. It is designed to make UI assets understandable by both humans and AI systems.
 
 - Source-first distribution for local ownership and deep customization
 - Independent PC and H5 component systems with shared design protocols

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Veku Design Mapping",
+  "title": "Vekui Design Mapping",
   "type": "object",
   "required": [
     "componentId",

@@ -1,2 +1,2 @@
-export const uiPcPackage = "@veku/ui-pc";
+export const uiPcPackage = "@vekui/ui-pc";
 

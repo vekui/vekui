@@ -1,2 +1,2 @@
-export const schemaPackage = "@veku/schema";
+export const schemaPackage = "@vekui/schema";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@veku/adapter-figma",
+  "name": "@vekui/adapter-figma",
   "version": "0.1.0",
   "private": true,
   "type": "module"

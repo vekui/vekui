@@ -1,4 +1,4 @@
 export function printBootstrapHint(): string {
-  return "Use veku init once the CLI implementation begins.";
+  return "Use vekui init once the CLI implementation begins.";
 }
 

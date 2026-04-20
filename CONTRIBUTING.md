@@ -1,10 +1,10 @@
-# Contributing to Veku
+# Contributing to Vekui
 
-Thanks for helping build Veku.
+Thanks for helping build Vekui.
 
 ## Development Model
 
-Veku is a source-first monorepo. Contributions should align with the repository structure and protocol-first philosophy.
+Vekui is a source-first monorepo. Contributions should align with the repository structure and protocol-first philosophy.
 
 - `packages/schema` owns shared protocol definitions
 - `packages/tokens` owns canonical token fixtures and compilation targets

@@ -1,9 +1,9 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Veku Discussions
-    url: https://github.com/veku/veku/discussions
+  - name: Vekui Discussions
+    url: https://github.com/vekui/vekui/discussions
     about: Ask questions or share ideas with the community.
-  - name: Veku Documentation
-    url: https://veku.dev
+  - name: Vekui Documentation
+    url: https://vekui.dev
     about: Read the project docs once the site is published.
 
