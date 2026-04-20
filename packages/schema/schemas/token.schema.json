@@ -31,7 +31,7 @@
         },
         "scope": {
           "type": "string",
-          "enum": ["semantic", "component", "alias"]
+          "enum": ["primitive", "semantic", "component", "alias"]
         },
         "platforms": {
           "type": "array",
@@ -72,6 +72,11 @@
           },
           "then": {
             "required": ["component"]
+          },
+          "else": {
+            "not": {
+              "required": ["component"]
+            }
           }
         }
       ],

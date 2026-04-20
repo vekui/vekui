@@ -9,7 +9,7 @@ export type JsonValue =
 export type VekuiNamespace = "pc" | "h5" | "neutral" | "recipes";
 export type VekuiPlatform = "pc" | "h5" | "shared";
 export type RegistryItemType = "component" | "primitive" | "block" | "recipe";
-export type TokenScope = "semantic" | "component" | "alias";
+export type TokenScope = "primitive" | "semantic" | "component" | "alias";
 export type TokenKind =
   | "color"
   | "radius"

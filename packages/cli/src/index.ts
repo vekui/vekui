@@ -8,6 +8,7 @@ import {
   type ComponentManifest,
   type DesignMapping,
   type SchemaValidationResult,
+  type TokenDocument,
   type ThemePatch
 } from "../../schema/src/index.js";
 import {
@@ -18,6 +19,8 @@ import {
   type RegistryVerificationResult
 } from "../../registry/src/index.js";
 import {
+  assertTokenDocumentSemantics,
+  compileTokenDocument,
   inspectTokenDocument,
   loadTokenDocument,
   resolveDefaultTokenDocumentPath,
@@ -65,6 +68,13 @@ interface ThemeExportPayload {
   workspaceRoot: string;
   filePath: string;
   exportTargets: Record<string, string[]>;
+  outputs: {
+    cssVars: unknown;
+    tailwind: unknown;
+    pencil: unknown;
+    figma: unknown;
+    json: unknown;
+  };
 }
 
 function writeLine(output: OutputStream, message = ""): void {
@@ -202,6 +212,11 @@ function renderThemeExportText(output: OutputStream, payload: ThemeExportPayload
   for (const [target, tokens] of Object.entries(payload.exportTargets)) {
     writeLine(output, `${target}: ${tokens.join(", ")}`);
   }
+
+  writeLine(
+    output,
+    `Compiled outputs: css-vars, tailwind, pencil, figma, json`
+  );
 }
 
 function renderPencilSyncText(
@@ -255,6 +270,8 @@ function renderTokenInspectionText(output: OutputStream, inspection: TokenInspec
   writeLine(output, `Path: ${filePath}`);
   writeLine(output, `Modes: ${inspection.modeCount}`);
   writeLine(output, `Tokens: ${inspection.tokenCount}`);
+  writeLine(output, `Layers: ${JSON.stringify(inspection.layers)}`);
+  writeLine(output, `Aliases: ${inspection.aliasCount}`);
   writeLine(output, `Scopes: ${JSON.stringify(inspection.scopes)}`);
   writeLine(output, `Platforms: ${JSON.stringify(inspection.platforms)}`);
   writeLine(output, `Export targets: ${JSON.stringify(inspection.exportTargets)}`);
@@ -272,6 +289,16 @@ async function runValidateCommand(
 ): Promise<void> {
   const schemaResults = scope === "registry" ? [] : await validateExampleFixtures(rootDir);
   const registryResults = scope === "schema" ? [] : await assertRegistryIntegrity(rootDir);
+
+  if (scope === "all" || scope === "schema") {
+    const exampleTokenDocument = await readJsonFile<TokenDocument>(
+      path.join(rootDir, "packages/schema/examples/token.example.json")
+    );
+    const defaultTokenDocument = await loadTokenDocument(resolveDefaultTokenDocumentPath(rootDir));
+
+    assertTokenDocumentSemantics(exampleTokenDocument);
+    assertTokenDocumentSemantics(defaultTokenDocument);
+  }
 
   if (jsonOutput) {
     const payload: ValidatePayload = {
@@ -412,6 +439,8 @@ async function runThemeExportCommand(
     ? path.resolve(cwd, tokenDocumentPathArg)
     : resolveDefaultTokenDocumentPath(rootDir);
   const document = await loadTokenDocument(tokenDocumentPath);
+  assertTokenDocumentSemantics(document);
+  const compiled = compileTokenDocument(document);
   const exportTargets = Object.fromEntries(
     [...new Set(document.tokens.flatMap((token) => token.exportTargets))]
       .sort((left, right) => left.localeCompare(right))
@@ -426,7 +455,14 @@ async function runThemeExportCommand(
   const payload: ThemeExportPayload = {
     workspaceRoot: rootDir,
     filePath: relativeToRoot(rootDir, tokenDocumentPath),
-    exportTargets
+    exportTargets,
+    outputs: {
+      cssVars: compiled.cssVars,
+      tailwind: compiled.tailwind,
+      pencil: compiled.pencil,
+      figma: compiled.figma,
+      json: compiled.json
+    }
   };
 
   if (jsonOutput) {
@@ -544,6 +580,7 @@ export async function runCli(argv = process.argv.slice(2), runtime: CliRuntime =
         ? path.resolve(cwd, rest[0])
         : resolveDefaultTokenDocumentPath(rootDir);
       const document = await loadTokenDocument(tokenDocumentPath);
+      assertTokenDocumentSemantics(document);
       const inspection = inspectTokenDocument(document);
 
       if (jsonOutput) {

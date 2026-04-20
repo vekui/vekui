@@ -69,3 +69,4 @@ All commands support `--json` for machine-readable output.
 - [Schema Surfaces](./docs/protocols/schema-surfaces.md)
 - [Source Registry Contract](./docs/protocols/source-registry.md)
 - [CLI Workspace Contract](./docs/protocols/cli-workspace.md)
+- [Token Compilation Contract](./docs/protocols/token-compilation.md)

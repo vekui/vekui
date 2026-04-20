@@ -35,5 +35,5 @@ Every command supports `--json` so Studio, adapters, and AI agents can consume t
 - `init` scaffolds local config and state expectations.
 - `add` resolves a source-first install plan from registry metadata.
 - `theme apply` validates a theme patch and returns a structured patch summary.
-- `theme export` groups token paths by export target.
+- `theme export` compiles token outputs for css vars, Tailwind, Pencil, Figma, and resolved JSON payloads.
 - `sync pencil` exposes the manifest and token binding payload that a Pencil adapter would consume next.

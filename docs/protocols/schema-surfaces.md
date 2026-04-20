@@ -8,6 +8,7 @@ Vekui keeps its AI-facing protocol layer in `packages/schema`. Each JSON schema 
 
 Defines the portable token document used by runtime theming, Tailwind export, design adapters, and theme patches.
 
+- `primitive` tokens are the raw design values.
 - `semantic` tokens are shared design intent.
 - `component` tokens are resolved per component family and must declare `component`.
 - `alias` tokens point at another token path via `aliasOf`.

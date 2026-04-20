@@ -1,5 +1,6 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
+import { assertTokenDocumentSemantics } from "../../tokens/src/index.js";
 import {
   readJsonFile,
   resolveWorkspaceRoot,
@@ -279,7 +280,9 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
         if (tokenRef.exists) {
           const tokenPath = path.join(rootDir, tokenRef.path);
           await validateJsonFile("token", tokenPath, rootDir);
-          tokenDocuments.push(await readJsonFile<TokenDocument>(tokenPath));
+          const tokenDocument = await readJsonFile<TokenDocument>(tokenPath);
+          assertTokenDocumentSemantics(tokenDocument);
+          tokenDocuments.push(tokenDocument);
         }
       }
 
