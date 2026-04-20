@@ -32,6 +32,17 @@ async function writeJsonFile<T extends object>(rootDir: string, relativePath: st
   await writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
+async function updateTextFile(
+  rootDir: string,
+  relativePath: string,
+  updater: (current: string) => string
+): Promise<void> {
+  const filePath = path.join(rootDir, relativePath);
+  const current = await readFile(filePath, "utf8");
+  const next = updater(current);
+  await writeFile(filePath, next, "utf8");
+}
+
 test("assertRegistryIntegrity accepts app-owned recipe result surfaces", async () => {
   const workspaceRoot = await createTempWorkspace();
 
@@ -117,6 +128,59 @@ test("assertRegistryIntegrity rejects duplicate registry ids with conflicting it
       assert.match(String(error), /Duplicate registry id pc\.button/);
       assert.match(String(error), /packages\/registry\/fixtures\/items\/pc\/button\.json/);
       assert.match(String(error), /packages\/registry\/fixtures\/items\/pc\/button-copy\.json/);
+      return true;
+    });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test("assertRegistryIntegrity rejects recipe source wrapper install-authority drift", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    await updateTextFile(workspaceRoot, "packages/recipes/src/pc-list-page-basic.ts", (source) =>
+      source.replace(
+        "requiredRegistryItems: pcListPageBasicRecipe.requiredBlocks",
+        "requiredRegistryItems: []"
+      )
+    );
+
+    await assert.rejects(() => assertRegistryIntegrity(workspaceRoot), (error: unknown) => {
+      assert.match(String(error), /requiredRegistryItems/);
+      assert.match(String(error), /packages\/recipes\/src\/pc-list-page-basic\.ts/);
+      return true;
+    });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test("assertRegistryIntegrity rejects string variants with zero mapping coverage", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    await updateJsonFile<ComponentManifest>(workspaceRoot, "packages/ui-pc/manifests/button.manifest.json", (manifest) => ({
+      ...manifest,
+      variants: [
+        {
+          ...manifest.variants[0],
+          type: "string"
+        }
+      ]
+    }));
+
+    await updateJsonFile<{ componentId: string; tool: string; tokenBindings: object[]; variantMappings: object[]; slotMappings: object[]; stateMappings: object[]; assetRefs: string[]; syncRules: string[] }>(
+      workspaceRoot,
+      "packages/adapter-pencil/mappings/pc.button.mapping.json",
+      (mapping) => ({
+        ...mapping,
+        variantMappings: []
+      })
+    );
+
+    await assert.rejects(() => assertRegistryIntegrity(workspaceRoot), (error: unknown) => {
+      assert.match(String(error), /string variant tone/);
       return true;
     });
   } finally {

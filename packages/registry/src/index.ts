@@ -225,6 +225,16 @@ function collectMappingConsistencyIssues(
   }
 
   for (const variant of manifest.variants) {
+    const mappedValues = variantCoverage.get(variant.name);
+
+    if (variant.type === "string") {
+      if (!mappedValues || mappedValues.size === 0) {
+        issues.push(`design mappings must define at least one mapping for string variant ${variant.name}.`);
+      }
+
+      continue;
+    }
+
     const expectedValues =
       variant.type === "enum"
         ? (variant.values ?? [])
@@ -235,8 +245,6 @@ function collectMappingConsistencyIssues(
     if (expectedValues.length === 0) {
       continue;
     }
-
-    const mappedValues = variantCoverage.get(variant.name);
 
     if (!mappedValues) {
       issues.push(`design mappings must cover manifest variant ${variant.name}.`);
@@ -324,6 +332,8 @@ interface SourceExportSurface {
   found: boolean;
   inspectable: boolean;
   topLevelKeys: string[];
+  objectLiteral?: ts.ObjectLiteralExpression;
+  sourceFile?: ts.SourceFile;
 }
 
 function hasExportModifier(node: ts.Node): boolean {
@@ -362,6 +372,109 @@ function collectObjectLiteralKeys(initializer: ts.ObjectLiteralExpression): stri
   }
 
   return keys;
+}
+
+function unwrapExpression(expression: ts.Expression): ts.Expression {
+  if (
+    ts.isParenthesizedExpression(expression) ||
+    ts.isAsExpression(expression) ||
+    ts.isSatisfiesExpression(expression) ||
+    ts.isTypeAssertionExpression(expression)
+  ) {
+    return unwrapExpression(expression.expression);
+  }
+
+  return expression;
+}
+
+function findObjectPropertyExpression(
+  objectLiteral: ts.ObjectLiteralExpression,
+  propertyName: string
+): ts.Expression | null {
+  for (const property of objectLiteral.properties) {
+    if (!ts.isPropertyAssignment(property)) {
+      continue;
+    }
+
+    const resolvedName = resolvePropertyName(property.name);
+
+    if (resolvedName === propertyName) {
+      return unwrapExpression(property.initializer);
+    }
+  }
+
+  return null;
+}
+
+function findObjectPropertyObjectLiteral(
+  objectLiteral: ts.ObjectLiteralExpression,
+  propertyName: string
+): ts.ObjectLiteralExpression | null {
+  const expression = findObjectPropertyExpression(objectLiteral, propertyName);
+
+  return expression && ts.isObjectLiteralExpression(expression) ? expression : null;
+}
+
+function readStringLiteralValue(expression: ts.Expression | null): string | null {
+  if (!expression) {
+    return null;
+  }
+
+  const unwrappedExpression = unwrapExpression(expression);
+
+  return ts.isStringLiteral(unwrappedExpression) || ts.isNoSubstitutionTemplateLiteral(unwrappedExpression)
+    ? unwrappedExpression.text
+    : null;
+}
+
+function readStringArrayValue(expression: ts.Expression | null): string[] | null {
+  if (!expression) {
+    return null;
+  }
+
+  const unwrappedExpression = unwrapExpression(expression);
+
+  if (!ts.isArrayLiteralExpression(unwrappedExpression)) {
+    return null;
+  }
+
+  const values: string[] = [];
+
+  for (const element of unwrappedExpression.elements) {
+    const value = readStringLiteralValue(element);
+
+    if (value === null) {
+      return null;
+    }
+
+    values.push(value);
+  }
+
+  return values;
+}
+
+function readReferencePath(expression: ts.Expression | null): string | null {
+  if (!expression) {
+    return null;
+  }
+
+  const unwrappedExpression = unwrapExpression(expression);
+
+  if (ts.isIdentifier(unwrappedExpression)) {
+    return unwrappedExpression.text;
+  }
+
+  if (ts.isPropertyAccessExpression(unwrappedExpression)) {
+    const left = readReferencePath(unwrappedExpression.expression);
+
+    return left ? `${left}.${unwrappedExpression.name.text}` : null;
+  }
+
+  return null;
+}
+
+function arraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function inspectSourceExportSurface(sourceText: string, filePath: string, exportName: string): SourceExportSurface {
@@ -439,7 +552,9 @@ function inspectSourceExportSurface(sourceText: string, filePath: string, export
     filePath,
     found: true,
     inspectable: true,
-    topLevelKeys: collectObjectLiteralKeys(objectLiteral)
+    topLevelKeys: collectObjectLiteralKeys(objectLiteral),
+    objectLiteral,
+    sourceFile
   };
 }
 
@@ -498,6 +613,98 @@ async function collectSourceExportIssues(
     if (!topLevelKeys.has(expectedKey)) {
       issues.push(
         `sourceExport ${item.sourceExport} in ${inspection.filePath} must expose top-level key ${expectedKey} for manifest variant ${variant.name}.`
+      );
+    }
+  }
+
+  return issues;
+}
+
+async function collectRecipeSourceExportIssues(
+  item: RegistryItem,
+  manifest: RecipeDocument,
+  rootDir: string
+): Promise<string[]> {
+  const inspection = await resolveSourceExportSurface(item, rootDir);
+
+  if (!inspection) {
+    return [`sourceExport ${item.sourceExport} was not found in the declared sourceFiles.`];
+  }
+
+  if (!inspection.inspectable || !inspection.objectLiteral) {
+    return [
+      `sourceExport ${item.sourceExport} in ${inspection.filePath} must resolve to an exported object literal recipe source contract.`
+    ];
+  }
+
+  const issues: string[] = [];
+  const topLevelKeys = new Set(inspection.topLevelKeys);
+  const requiredTopLevelKeys = ["manifest", "assembly", "installation"];
+
+  for (const requiredKey of requiredTopLevelKeys) {
+    if (!topLevelKeys.has(requiredKey)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose top-level key ${requiredKey}.`
+      );
+    }
+  }
+
+  const assemblyObject = findObjectPropertyObjectLiteral(inspection.objectLiteral, "assembly");
+
+  if (!assemblyObject) {
+    issues.push(`recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose assembly as an object literal.`);
+  } else {
+    const installStrategy = readStringLiteralValue(findObjectPropertyExpression(assemblyObject, "installStrategy"));
+    const installTarget = readStringLiteralValue(findObjectPropertyExpression(assemblyObject, "installTarget"));
+    const dependencyOrder = readStringArrayValue(findObjectPropertyExpression(assemblyObject, "dependencyOrder"));
+
+    if (installStrategy !== item.install.strategy) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.installStrategy aligned with registry install strategy ${item.install.strategy}.`
+      );
+    }
+
+    if (!installTarget || !item.install.targets.includes(installTarget)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.installTarget aligned with registry install targets ${item.install.targets.join(", ")}.`
+      );
+    }
+
+    if (!dependencyOrder || !arraysEqual(dependencyOrder, item.dependencyRefs)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.dependencyOrder aligned with dependencyRefs ${item.dependencyRefs.join(", ")}.`
+      );
+    }
+  }
+
+  const installationObject = findObjectPropertyObjectLiteral(inspection.objectLiteral, "installation");
+
+  if (!installationObject) {
+    issues.push(`recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose installation as an object literal.`);
+  } else {
+    const requiredRegistryItemsExpression = findObjectPropertyExpression(installationObject, "requiredRegistryItems");
+    const requiredRegistryItemsArray = readStringArrayValue(requiredRegistryItemsExpression);
+    const requiredRegistryItemsReference = readReferencePath(requiredRegistryItemsExpression);
+    const manifestReference = readReferencePath(findObjectPropertyExpression(inspection.objectLiteral, "manifest"));
+    const expectedManifestReference =
+      manifestReference !== null ? `${manifestReference}.requiredBlocks` : null;
+
+    if (!arraysEqual(manifest.requiredBlocks, item.dependencyRefs)) {
+      issues.push(
+        `recipe manifest ${manifest.id} must keep requiredBlocks aligned with dependencyRefs ${item.dependencyRefs.join(", ")}.`
+      );
+    }
+
+    const matchesManifestReference =
+      expectedManifestReference !== null && requiredRegistryItemsReference === expectedManifestReference;
+    const matchesRequiredBlocksArray =
+      requiredRegistryItemsArray !== null && arraysEqual(requiredRegistryItemsArray, manifest.requiredBlocks);
+    const matchesDependencyRefsArray =
+      requiredRegistryItemsArray !== null && arraysEqual(requiredRegistryItemsArray, item.dependencyRefs);
+
+    if (!matchesManifestReference && !(matchesRequiredBlocksArray && matchesDependencyRefsArray)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep installation.requiredRegistryItems aligned with ${expectedManifestReference ?? "manifest.requiredBlocks"} and dependencyRefs ${item.dependencyRefs.join(", ")}.`
       );
     }
   }
@@ -611,7 +818,10 @@ export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promi
 
         if (manifestKind === "recipe") {
           const manifestDocument = await readJsonFile<RecipeDocument>(manifestPath);
-          consistencyIssues.push(...collectManifestConsistencyIssues(item, manifestDocument));
+          consistencyIssues.push(
+            ...collectManifestConsistencyIssues(item, manifestDocument),
+            ...(await collectRecipeSourceExportIssues(item, manifestDocument, rootDir))
+          );
         } else {
           const manifestDocument = await readJsonFile<ComponentManifest>(manifestPath);
           consistencyIssues.push(
