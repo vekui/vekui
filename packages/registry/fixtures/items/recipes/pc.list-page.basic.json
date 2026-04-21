@@ -14,7 +14,7 @@
   "tokenRefs": [
     "packages/tokens/fixtures/default.tokens.json"
   ],
-  "dependencyRefs": ["neutral.filter-bar"],
+  "dependencyRefs": ["neutral.filter-bar", "pc.table-section"],
   "peerDependencyHints": ["react", "react-dom"],
   "install": {
     "strategy": "compose",
@@ -30,9 +30,9 @@
     "intentKeywords": ["list-page", "table-page", "index-page", "admin-list"],
     "adaptationNotes": [
       "Use this recipe when the page needs shared filtering above a dense results region.",
-      "Install the neutral filter bar first, then compose your app's table, list, or empty-state result region inside the body."
+      "Install neutral.filter-bar first, then use pc.table-section as the default shared result-region asset inside the body."
     ],
     "preferredRecipes": []
   },
-  "hash": "recipes-pc-list-page-basic-v3"
+  "hash": "recipes-pc-list-page-basic-v4"
 }

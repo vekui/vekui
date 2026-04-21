@@ -1,8 +1,6 @@
 import recipeFixture from "../fixtures/pc.list-page.basic.json" with { type: "json" };
 import type { RecipeDocument } from "../../schema/src/index.js";
 
-export const appResultRegionSurfaceId = "app.result-region";
-
 export interface RecipeAssemblyPlan {
   installStrategy: "compose";
   installTarget: "src/recipes";
@@ -36,12 +34,12 @@ export const pcListPageBasicRecipeSource: RecipeSourceArtifact = {
   assembly: {
     installStrategy: "compose",
     installTarget: "src/recipes",
-    dependencyOrder: ["neutral.filter-bar"],
+    dependencyOrder: ["neutral.filter-bar", "pc.table-section"],
     regionSequence: pcListPageBasicRecipe.regions.map((region) => region.name),
     defaultComposition: [
       {
         region: "body",
-        children: ["neutral.filter-bar", appResultRegionSurfaceId]
+        children: ["neutral.filter-bar", "pc.table-section"]
       }
     ]
   },
@@ -54,11 +52,11 @@ export const pcListPageBasicRecipeSource: RecipeSourceArtifact = {
     purpose: "Shared starter for PC list pages that need filters before a dense result region.",
     whenToStartFromThisRecipe: [
       "The page needs search and scoped filters that stay visible above results.",
-      "The main result surface is app-owned and can be a table, list, or empty state that swaps in place."
+      "The main result surface should use pc.table-section as the default shared table and empty-state scaffold."
     ],
     extensionPoints: [
-      "Replace app.result-region with the app's own table, list, or empty-state implementation once that surface exists.",
-      "Add app-owned summary or bulk-action sections around the body region only after the shared filter bar is in place."
+      "Layer app-specific columns, row actions, and data behavior inside pc.table-section instead of replacing the shared result-region asset.",
+      "Add app-owned summary or bulk-action sections around the body region only after neutral.filter-bar and pc.table-section are in place."
     ]
   }
 };

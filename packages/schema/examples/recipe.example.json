@@ -3,17 +3,17 @@
   "platform": "pc",
   "intent": "list-page",
   "layout": "page-shell",
-  "requiredBlocks": ["neutral.filter-bar"],
+  "requiredBlocks": ["neutral.filter-bar", "pc.table-section"],
   "optionalBlocks": [],
   "regions": [
     {
       "name": "body",
-      "accepts": ["neutral.filter-bar", "app.result-region"],
+      "accepts": ["neutral.filter-bar", "pc.table-section"],
       "required": true
     }
   ],
-  "layoutRules": ["Render neutral.filter-bar before app.result-region within the body region."],
-  "interactionRules": ["Let app.result-region swap between table, list, and empty-state content without moving neutral.filter-bar."],
+  "layoutRules": ["Render neutral.filter-bar before pc.table-section within the body region."],
+  "interactionRules": ["Let pc.table-section handle the default shared table, empty, and selection states without moving neutral.filter-bar."],
   "recommendedTokens": ["semantic.color.action.primary"],
   "antiPatterns": ["Do not place destructive bulk actions above filters."]
 }
