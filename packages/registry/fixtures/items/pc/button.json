@@ -1,22 +1,35 @@
 {
+  "id": "pc.button",
   "name": "button",
   "namespace": "pc",
   "platform": "pc",
   "type": "component",
+  "sourcePackage": "@vekui/ui-pc",
+  "sourceExport": "pcButtonContract",
   "sourceFiles": [
     "packages/ui-pc/src/button.ts"
   ],
   "manifestRef": "packages/ui-pc/manifests/button.manifest.json",
+  "manifestId": "pc.button",
   "tokenRefs": [
     "packages/tokens/fixtures/default.tokens.json"
   ],
   "dependencyRefs": [],
-  "peerDependencyHints": ["react"],
-  "installTargetHints": ["src/components/ui"],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/ui"],
+    "requiredDirectories": ["src/components/ui"]
+  },
   "compatibility": {
     "react": "^19.0.0",
     "tailwind": "^4.0.0"
   },
+  "registryTags": ["form", "action"],
+  "aiHints": {
+    "intentKeywords": ["submit", "confirm", "primary-action"],
+    "adaptationNotes": ["Prefer tone variants for semantic emphasis instead of ad-hoc color overrides."],
+    "preferredRecipes": ["recipes.pc.list-page.basic"]
+  },
   "hash": "pc-button-v1"
 }
-

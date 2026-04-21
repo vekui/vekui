@@ -3,14 +3,45 @@
   "modes": ["light", "dark"],
   "tokens": [
     {
+      "name": "blue-600",
+      "path": "primitive.color.blue.600",
+      "kind": "color",
+      "scope": "primitive",
+      "platforms": ["shared"],
+      "value": "#1d4ed8",
+      "description": "Base blue used to derive primary interactive surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+    },
+    {
+      "name": "surface-base",
+      "path": "primitive.color.surface.base",
+      "kind": "color",
+      "scope": "primitive",
+      "platforms": ["shared"],
+      "value": "#ffffff",
+      "description": "Base surface color used across neutral containers.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+    },
+    {
       "name": "action-primary",
       "path": "semantic.color.action.primary",
       "kind": "color",
       "scope": "semantic",
       "platforms": ["shared"],
-      "value": "#1d4ed8",
+      "aliasOf": "primitive.color.blue.600",
+      "description": "Semantic primary action color shared across product surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+    },
+    {
+      "name": "button-background",
+      "path": "component.pc.button.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "aliasOf": "semantic.color.action.primary",
+      "component": "pc.button",
+      "description": "Resolved background token for the core PC button family.",
       "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
     }
   ]
 }
-

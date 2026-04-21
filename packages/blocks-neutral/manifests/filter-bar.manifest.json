@@ -1,0 +1,119 @@
+{
+  "id": "neutral.filter-bar",
+  "platform": "shared",
+  "level": "block",
+  "category": "filtering",
+  "title": "Filter Bar",
+  "description": "A shared list filtering block that combines search, scoped filters, and optional actions ahead of result content.",
+  "family": "filter-bar",
+  "status": "experimental",
+  "slots": [
+    {
+      "name": "search-input",
+      "required": false,
+      "description": "A compact search field for narrowing the current result set."
+    },
+    {
+      "name": "filter-groups",
+      "required": true,
+      "description": "The canonical filter controls for status, owner, date, or other scoped facets."
+    },
+    {
+      "name": "result-summary",
+      "required": false,
+      "description": "A lightweight summary of the active filter state or result count."
+    },
+    {
+      "name": "primary-action",
+      "required": false,
+      "description": "An optional action such as create, export, or save view."
+    },
+    {
+      "name": "secondary-actions",
+      "required": false,
+      "description": "Secondary actions like clear all, reset, or saved filters."
+    }
+  ],
+  "variants": [
+    {
+      "name": "density",
+      "type": "enum",
+      "values": ["comfortable", "compact"],
+      "default": "comfortable"
+    },
+    {
+      "name": "filter-layout",
+      "type": "enum",
+      "values": ["inline", "wrap"],
+      "default": "wrap"
+    },
+    {
+      "name": "primary-action-placement",
+      "type": "enum",
+      "values": ["trailing", "separate-row"],
+      "default": "trailing"
+    }
+  ],
+  "states": [
+    {
+      "name": "busy",
+      "controllable": true,
+      "defaultValue": false
+    },
+    {
+      "name": "has-active-filters",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onQueryChange",
+      "payload": {
+        "query": "string"
+      }
+    },
+    {
+      "name": "onFiltersApply",
+      "payload": {
+        "dirtyFilterCount": "number"
+      }
+    },
+    {
+      "name": "onPrimaryAction",
+      "payload": {
+        "intent": "string"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "search",
+    "attributes": ["aria-label"]
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.neutral.filter-bar.background"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": [
+      "The page only needs a single standalone search field without scoped filters.",
+      "The flow requires mobile-only sheet presentation or platform-specific navigation chrome."
+    ]
+  },
+  "composition": {
+    "recommendedChildren": []
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/neutral.filter-bar.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    },
+    {
+      "name": "with-actions"
+    }
+  ]
+}

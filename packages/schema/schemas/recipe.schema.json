@@ -2,6 +2,39 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vekui Recipe",
   "type": "object",
+  "$defs": {
+    "recipeId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral|recipes)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "catalogSurfaceId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "compositionSurfaceId": {
+      "type": "string",
+      "pattern": "^((pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*|app\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*)$"
+    },
+    "tokenPath": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+$"
+    },
+    "region": {
+      "type": "object",
+      "required": ["name", "accepts", "required"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "accepts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/compositionSurfaceId" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
   "required": [
     "id",
     "platform",
@@ -16,18 +49,30 @@
     "antiPatterns"
   ],
   "properties": {
-    "id": { "type": "string" },
-    "platform": { "type": "string" },
-    "intent": { "type": "string" },
-    "layout": { "type": "string" },
-    "requiredBlocks": { "type": "array", "items": { "type": "string" } },
-    "optionalBlocks": { "type": "array", "items": { "type": "string" } },
-    "regions": { "type": "array", "items": { "type": "object" } },
-    "layoutRules": { "type": "array", "items": { "type": "string" } },
-    "interactionRules": { "type": "array", "items": { "type": "string" } },
-    "recommendedTokens": { "type": "array", "items": { "type": "string" } },
-    "antiPatterns": { "type": "array", "items": { "type": "string" } }
+    "id": { "$ref": "#/$defs/recipeId" },
+    "platform": { "type": "string", "enum": ["pc", "h5", "shared"] },
+    "intent": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "layout": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "requiredBlocks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/catalogSurfaceId" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "optionalBlocks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/catalogSurfaceId" },
+      "uniqueItems": true
+    },
+    "regions": { "type": "array", "items": { "$ref": "#/$defs/region" }, "minItems": 1 },
+    "layoutRules": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "interactionRules": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "recommendedTokens": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tokenPath" },
+      "uniqueItems": true
+    },
+    "antiPatterns": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
   },
   "additionalProperties": false
 }
-

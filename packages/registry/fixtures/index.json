@@ -1,8 +1,12 @@
 {
   "version": 1,
   "items": [
+    "packages/registry/fixtures/items/neutral/filter-bar.json",
     "packages/registry/fixtures/items/pc/button.json",
+    "packages/registry/fixtures/items/pc/table-section.json",
+    "packages/registry/fixtures/items/recipes/pc.list-page.basic.json",
+    "packages/registry/fixtures/items/h5/action-sheet.json",
+    "packages/registry/fixtures/items/h5/picker.json",
     "packages/registry/fixtures/items/h5/sheet.json"
   ]
 }
-

@@ -1,0 +1,88 @@
+{
+  "componentId": "pc.table-section",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.pc.table-section.background",
+      "target": "fill.surface"
+    },
+    {
+      "token": "component.pc.table-section.divider",
+      "target": "stroke.divider"
+    }
+  ],
+  "variantMappings": [
+    {
+      "variant": "density",
+      "value": "comfortable",
+      "target": "layout.density.comfortable"
+    },
+    {
+      "variant": "density",
+      "value": "compact",
+      "target": "layout.density.compact"
+    },
+    {
+      "variant": "selection",
+      "value": "none",
+      "target": "behavior.selection.none"
+    },
+    {
+      "variant": "selection",
+      "value": "single",
+      "target": "behavior.selection.single"
+    },
+    {
+      "variant": "selection",
+      "value": "multiple",
+      "target": "behavior.selection.multiple"
+    },
+    {
+      "variant": "empty-state",
+      "value": "inline",
+      "target": "content.empty-state.inline"
+    },
+    {
+      "variant": "empty-state",
+      "value": "dedicated",
+      "target": "content.empty-state.dedicated"
+    }
+  ],
+  "slotMappings": [
+    {
+      "slot": "toolbar",
+      "target": "content.toolbar"
+    },
+    {
+      "slot": "table",
+      "target": "content.table"
+    },
+    {
+      "slot": "pagination",
+      "target": "content.pagination"
+    },
+    {
+      "slot": "empty-state",
+      "target": "content.empty-state"
+    }
+  ],
+  "stateMappings": [
+    {
+      "state": "busy",
+      "target": "state.loading"
+    },
+    {
+      "state": "empty",
+      "target": "state.empty"
+    },
+    {
+      "state": "has-selection",
+      "target": "state.has-selection"
+    }
+  ],
+  "assetRefs": [],
+  "syncRules": [
+    "Keep table-section scoped to dense result-region chrome, not full data-grid implementation detail.",
+    "Preserve complete variant coverage so density, selection, and empty-state semantics round-trip cleanly."
+  ]
+}

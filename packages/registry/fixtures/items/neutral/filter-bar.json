@@ -1,0 +1,38 @@
+{
+  "id": "neutral.filter-bar",
+  "name": "filter-bar",
+  "namespace": "neutral",
+  "platform": "shared",
+  "type": "block",
+  "sourcePackage": "@vekui/blocks-neutral",
+  "sourceExport": "neutralFilterBarContract",
+  "sourceFiles": [
+    "packages/blocks-neutral/src/filter-bar.ts"
+  ],
+  "manifestRef": "packages/blocks-neutral/manifests/filter-bar.manifest.json",
+  "manifestId": "neutral.filter-bar",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/neutral"],
+    "requiredDirectories": ["src/components/neutral"]
+  },
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "registryTags": ["filters", "search", "list"],
+  "aiHints": {
+    "intentKeywords": ["filter-bar", "search-filters", "list-toolbar", "faceted-search"],
+    "adaptationNotes": [
+      "Use this block when a list or table needs persistent search and filtering before the result region.",
+      "Keep the block neutral and reusable across page shells instead of baking in platform-specific header chrome."
+    ],
+    "preferredRecipes": ["recipes.pc.list-page.basic"]
+  },
+  "hash": "neutral-filter-bar-v2"
+}

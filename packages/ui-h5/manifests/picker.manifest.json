@@ -1,0 +1,87 @@
+{
+  "id": "h5.picker",
+  "platform": "h5",
+  "level": "composite",
+  "category": "selection",
+  "title": "Picker",
+  "description": "A mobile wheel picker presented in a bottom sheet for bounded option sets.",
+  "family": "picker",
+  "status": "experimental",
+  "slots": [
+    {
+      "name": "trigger",
+      "required": false
+    },
+    {
+      "name": "column",
+      "required": true
+    },
+    {
+      "name": "toolbar",
+      "required": false
+    }
+  ],
+  "variants": [
+    {
+      "name": "columns",
+      "type": "enum",
+      "values": ["single", "cascading"],
+      "default": "single"
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "controllable": true,
+      "defaultValue": false
+    },
+    {
+      "name": "disabled",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onOpenChange",
+      "payload": {
+        "open": "boolean"
+      }
+    },
+    {
+      "name": "onValueChange",
+      "payload": {
+        "value": "string | string[]"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "dialog"
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.h5.picker.background"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": [
+      "The option set is unbounded or requires free-text search.",
+      "Selections need dense explanatory copy beside each option."
+    ]
+  },
+  "composition": {
+    "recommendedChildren": []
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/h5.picker.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    },
+    {
+      "name": "cascading"
+    }
+  ]
+}

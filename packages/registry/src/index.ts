@@ -1,2 +1,741 @@
+import { access } from "node:fs/promises";
+import path from "node:path";
+import { assertTokenDocumentSemantics } from "../../tokens/src/index.js";
+import {
+  readJsonFile,
+  resolveWorkspaceRoot,
+  validateJsonFile,
+  type ComponentManifest,
+  type DesignMapping,
+  type RecipeDocument,
+  type RegistryItem,
+  type TokenDocument,
+  type VekuiNamespace
+} from "../../schema/src/index.js";
+import {
+  extractRecipeAddPlan,
+  findObjectPropertyExpression,
+  findObjectPropertyObjectLiteral,
+  readReferencePath,
+  readStringArrayValue,
+  readStringLiteralValue,
+  resolveSourceExportSurface,
+  type RecipeAddPlan
+} from "./add-plan.js";
+
 export const registryFixturePath = "packages/registry/fixtures/index.json";
 
+export interface RegistryIndex {
+  version: number;
+  items: string[];
+}
+
+export interface RegistryRefCheck {
+  path: string;
+  exists: boolean;
+}
+
+export interface RegistryVerificationResult {
+  itemPath: string;
+  item: RegistryItem;
+  manifest: RegistryRefCheck;
+  designMappings: RegistryRefCheck[];
+  sourceFiles: RegistryRefCheck[];
+  tokenRefs: RegistryRefCheck[];
+  consistencyIssues: string[];
+  valid: boolean;
+}
+
+export interface RegistrySummary {
+  itemCount: number;
+  namespaces: Record<string, number>;
+  platforms: Record<string, number>;
+  types: Record<string, number>;
+}
+
+export interface RegistryAddResolution extends RegistryVerificationResult {
+  recipePlan?: RecipeAddPlan;
+}
+
+const appOwnedSurfaceIdPattern = /^app\.[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
+
+function incrementCounter(counter: Record<string, number>, key: string): void {
+  counter[key] = (counter[key] ?? 0) + 1;
+}
+
+function sortCounter(counter: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(Object.entries(counter).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+function isAppOwnedSurfaceId(value: string): boolean {
+  return appOwnedSurfaceIdPattern.test(value);
+}
+
+function formatDuplicateRegistryIdError(results: RegistryVerificationResult[]): string | null {
+  const itemPathsById = new Map<string, string[]>();
+
+  for (const result of results) {
+    const existingPaths = itemPathsById.get(result.item.id) ?? [];
+    existingPaths.push(result.itemPath);
+    itemPathsById.set(result.item.id, existingPaths);
+  }
+
+  const duplicateSections = [...itemPathsById.entries()]
+    .filter(([, itemPaths]) => itemPaths.length > 1)
+    .map(([registryId, itemPaths]) => {
+      const uniquePaths = [...new Set(itemPaths)].sort((left, right) => left.localeCompare(right));
+      const pathLines = uniquePaths.map((itemPath) => `- ${itemPath}`).join("\n");
+      return `Duplicate registry id ${registryId} found in:\n${pathLines}`;
+    });
+
+  if (duplicateSections.length === 0) {
+    return null;
+  }
+
+  return duplicateSections.join("\n\n");
+}
+
+async function checkRelativePath(rootDir: string, relativePath: string): Promise<RegistryRefCheck> {
+  try {
+    await access(path.join(rootDir, relativePath));
+    return { path: relativePath, exists: true };
+  } catch {
+    return { path: relativePath, exists: false };
+  }
+}
+
+function expectedInstallTarget(namespace: VekuiNamespace): string {
+  switch (namespace) {
+    case "pc":
+      return "src/components/ui";
+    case "h5":
+      return "src/components/mobile";
+    case "neutral":
+      return "src/components/neutral";
+    case "recipes":
+      return "src/recipes";
+  }
+}
+
+function expectedSourcePackage(namespace: VekuiNamespace): string | null {
+  switch (namespace) {
+    case "pc":
+      return "@vekui/ui-pc";
+    case "h5":
+      return "@vekui/ui-h5";
+    case "neutral":
+      return "@vekui/blocks-neutral";
+    case "recipes":
+      return "@vekui/recipes";
+  }
+}
+
+function collectNamespaceIssues(item: RegistryItem): string[] {
+  const issues: string[] = [];
+
+  if (item.namespace === "pc" && item.platform !== "pc") {
+    issues.push("pc namespace items must target the pc platform.");
+  }
+
+  if (item.namespace === "h5" && item.platform !== "h5") {
+    issues.push("h5 namespace items must target the h5 platform.");
+  }
+
+  if (item.namespace === "neutral" && item.platform !== "shared") {
+    issues.push("neutral namespace items must target the shared platform.");
+  }
+
+  if (item.namespace === "recipes" && item.type !== "recipe") {
+    issues.push("recipes namespace items must use the recipe type.");
+  }
+
+  return issues;
+}
+
+function collectInstallIssues(item: RegistryItem): string[] {
+  const issues: string[] = [];
+  const defaultTarget = expectedInstallTarget(item.namespace);
+
+  if (!item.install.targets.includes(defaultTarget)) {
+    issues.push(`install.targets must include ${defaultTarget}.`);
+  }
+
+  if (item.install.requiredDirectories.some((directory) => !item.install.targets.includes(directory))) {
+    issues.push("install.requiredDirectories must be a subset of install.targets.");
+  }
+
+  return issues;
+}
+
+function collectSourcePackageIssues(item: RegistryItem): string[] {
+  const issues: string[] = [];
+  const expectedPackage = expectedSourcePackage(item.namespace);
+
+  if (expectedPackage && item.sourcePackage !== expectedPackage) {
+    issues.push(`sourcePackage must be ${expectedPackage} for ${item.namespace} items.`);
+  }
+
+  return issues;
+}
+
+function collectManifestConsistencyIssues(
+  item: RegistryItem,
+  manifest: ComponentManifest | RecipeDocument
+): string[] {
+  const issues: string[] = [];
+
+  if (item.manifestId !== manifest.id) {
+    issues.push(`manifestId ${item.manifestId} does not match manifest id ${manifest.id}.`);
+  }
+
+  if (item.namespace === "recipes") {
+    if (!item.id.startsWith("recipes.")) {
+      issues.push("recipe registry item ids must start with recipes.");
+    }
+  } else if (item.id !== manifest.id) {
+    issues.push(`registry item id ${item.id} must match manifest id ${manifest.id}.`);
+  }
+
+  if (item.platform !== manifest.platform) {
+    issues.push(`registry item platform ${item.platform} must match manifest platform ${manifest.platform}.`);
+  }
+
+  return issues;
+}
+
+function collectMappingConsistencyIssues(
+  item: RegistryItem,
+  manifest: ComponentManifest,
+  mappings: DesignMapping[]
+): string[] {
+  const issues: string[] = [];
+
+  for (const mapping of mappings) {
+    if (mapping.componentId !== manifest.id) {
+      issues.push(`design mapping ${mapping.tool} must point at ${manifest.id}, got ${mapping.componentId}.`);
+    }
+  }
+
+  const tokenSet = new Set<string>();
+
+  for (const mapping of mappings) {
+    for (const binding of mapping.tokenBindings) {
+      tokenSet.add(binding.token);
+    }
+  }
+
+  if (item.type !== "recipe" && tokenSet.size === 0) {
+    issues.push("component-like registry items should expose at least one design token binding.");
+  }
+
+  const variantMappings = mappings.flatMap((mapping) => mapping.variantMappings);
+  const variantCoverage = new Map<string, Set<string>>();
+
+  for (const mapping of variantMappings) {
+    const values = variantCoverage.get(mapping.variant) ?? new Set<string>();
+    values.add(mapping.value);
+    variantCoverage.set(mapping.variant, values);
+  }
+
+  for (const variant of manifest.variants) {
+    const mappedValues = variantCoverage.get(variant.name);
+
+    if (variant.type === "string") {
+      if (!mappedValues || mappedValues.size === 0) {
+        issues.push(`design mappings must define at least one mapping for string variant ${variant.name}.`);
+      }
+
+      continue;
+    }
+
+    const expectedValues =
+      variant.type === "enum"
+        ? (variant.values ?? [])
+        : variant.type === "boolean"
+          ? ["true", "false"]
+          : [];
+
+    if (expectedValues.length === 0) {
+      continue;
+    }
+
+    if (!mappedValues) {
+      issues.push(`design mappings must cover manifest variant ${variant.name}.`);
+      continue;
+    }
+
+    for (const expectedValue of expectedValues) {
+      if (!mappedValues.has(expectedValue)) {
+        issues.push(`design mappings must cover variant ${variant.name} value ${expectedValue}.`);
+      }
+    }
+  }
+
+  return issues;
+}
+
+function collectRegistryReferenceIssues(
+  item: RegistryItem,
+  registryItemsById: Map<string, RegistryItem>
+): string[] {
+  const issues: string[] = [];
+
+  for (const dependencyRef of item.dependencyRefs) {
+    if (!registryItemsById.has(dependencyRef)) {
+      issues.push(`dependencyRef ${dependencyRef} was not found in the registry catalog.`);
+    }
+  }
+
+  for (const preferredRecipe of item.aiHints.preferredRecipes) {
+    const registryItem = registryItemsById.get(preferredRecipe);
+
+    if (!registryItem) {
+      issues.push(`preferredRecipe ${preferredRecipe} was not found in the registry catalog.`);
+      continue;
+    }
+
+    if (registryItem.type !== "recipe") {
+      issues.push(`preferredRecipe ${preferredRecipe} must point to a registry item with type recipe.`);
+    }
+  }
+
+  return issues;
+}
+
+function collectComponentCatalogIssues(manifest: ComponentManifest, surfaceIds: Set<string>): string[] {
+  const issues: string[] = [];
+
+  for (const childId of manifest.composition.recommendedChildren) {
+    if (!surfaceIds.has(childId) && !isAppOwnedSurfaceId(childId)) {
+      issues.push(`component manifest recommended child ${childId} was not found in the surface catalog.`);
+    }
+  }
+
+  return issues;
+}
+
+function collectRecipeCatalogIssues(manifest: RecipeDocument, surfaceIds: Set<string>): string[] {
+  const issues: string[] = [];
+
+  for (const requiredBlock of manifest.requiredBlocks) {
+    if (!surfaceIds.has(requiredBlock)) {
+      issues.push(`recipe requiredBlock ${requiredBlock} was not found in the surface catalog.`);
+    }
+  }
+
+  for (const optionalBlock of manifest.optionalBlocks) {
+    if (!surfaceIds.has(optionalBlock)) {
+      issues.push(`recipe optionalBlock ${optionalBlock} was not found in the surface catalog.`);
+    }
+  }
+
+  for (const region of manifest.regions) {
+    for (const acceptedSurface of region.accepts) {
+      if (!surfaceIds.has(acceptedSurface) && !isAppOwnedSurfaceId(acceptedSurface)) {
+        issues.push(`recipe region ${region.name} accepts missing surface ${acceptedSurface}.`);
+      }
+    }
+  }
+
+  return issues;
+}
+
+function arraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function toCamelCase(value: string): string {
+  return value.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase());
+}
+
+async function collectSourceExportIssues(
+  item: RegistryItem,
+  manifest: ComponentManifest,
+  rootDir: string
+): Promise<string[]> {
+  const inspection = await resolveSourceExportSurface(item, rootDir);
+
+  if (!inspection) {
+    return [`sourceExport ${item.sourceExport} was not found in the declared sourceFiles.`];
+  }
+
+  if (!inspection.inspectable) {
+    return [
+      `sourceExport ${item.sourceExport} in ${inspection.filePath} must resolve to an exported object literal contract.`
+    ];
+  }
+
+  const issues: string[] = [];
+  const topLevelKeys = new Set(inspection.topLevelKeys);
+
+  for (const variant of manifest.variants) {
+    const expectedKey = toCamelCase(variant.name);
+
+    if (!topLevelKeys.has(expectedKey)) {
+      issues.push(
+        `sourceExport ${item.sourceExport} in ${inspection.filePath} must expose top-level key ${expectedKey} for manifest variant ${variant.name}.`
+      );
+    }
+  }
+
+  return issues;
+}
+
+async function collectRecipeSourceExportIssues(
+  item: RegistryItem,
+  manifest: RecipeDocument,
+  rootDir: string
+): Promise<string[]> {
+  const inspection = await resolveSourceExportSurface(item, rootDir);
+
+  if (!inspection) {
+    return [`sourceExport ${item.sourceExport} was not found in the declared sourceFiles.`];
+  }
+
+  if (!inspection.inspectable || !inspection.objectLiteral) {
+    return [
+      `sourceExport ${item.sourceExport} in ${inspection.filePath} must resolve to an exported object literal recipe source contract.`
+    ];
+  }
+
+  const issues: string[] = [];
+  const topLevelKeys = new Set(inspection.topLevelKeys);
+  const requiredTopLevelKeys = ["manifest", "assembly", "installation"];
+
+  for (const requiredKey of requiredTopLevelKeys) {
+    if (!topLevelKeys.has(requiredKey)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose top-level key ${requiredKey}.`
+      );
+    }
+  }
+
+  const assemblyObject = findObjectPropertyObjectLiteral(inspection.objectLiteral, "assembly");
+
+  if (!assemblyObject) {
+    issues.push(`recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose assembly as an object literal.`);
+  } else {
+    const installStrategy = readStringLiteralValue(findObjectPropertyExpression(assemblyObject, "installStrategy"));
+    const installTarget = readStringLiteralValue(findObjectPropertyExpression(assemblyObject, "installTarget"));
+    const dependencyOrder = readStringArrayValue(findObjectPropertyExpression(assemblyObject, "dependencyOrder"));
+
+    if (installStrategy !== item.install.strategy) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.installStrategy aligned with registry install strategy ${item.install.strategy}.`
+      );
+    }
+
+    if (!installTarget || !item.install.targets.includes(installTarget)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.installTarget aligned with registry install targets ${item.install.targets.join(", ")}.`
+      );
+    }
+
+    if (!dependencyOrder || !arraysEqual(dependencyOrder, item.dependencyRefs)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep assembly.dependencyOrder aligned with dependencyRefs ${item.dependencyRefs.join(", ")}.`
+      );
+    }
+  }
+
+  const installationObject = findObjectPropertyObjectLiteral(inspection.objectLiteral, "installation");
+
+  if (!installationObject) {
+    issues.push(`recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must expose installation as an object literal.`);
+  } else {
+    const requiredRegistryItemsExpression = findObjectPropertyExpression(installationObject, "requiredRegistryItems");
+    const requiredRegistryItemsArray = readStringArrayValue(requiredRegistryItemsExpression);
+    const requiredRegistryItemsReference = readReferencePath(requiredRegistryItemsExpression);
+    const manifestReference = readReferencePath(findObjectPropertyExpression(inspection.objectLiteral, "manifest"));
+    const expectedManifestReference =
+      manifestReference !== null ? `${manifestReference}.requiredBlocks` : null;
+
+    if (!arraysEqual(manifest.requiredBlocks, item.dependencyRefs)) {
+      issues.push(
+        `recipe manifest ${manifest.id} must keep requiredBlocks aligned with dependencyRefs ${item.dependencyRefs.join(", ")}.`
+      );
+    }
+
+    const matchesManifestReference =
+      expectedManifestReference !== null && requiredRegistryItemsReference === expectedManifestReference;
+    const matchesRequiredBlocksArray =
+      requiredRegistryItemsArray !== null && arraysEqual(requiredRegistryItemsArray, manifest.requiredBlocks);
+    const matchesDependencyRefsArray =
+      requiredRegistryItemsArray !== null && arraysEqual(requiredRegistryItemsArray, item.dependencyRefs);
+
+    if (!matchesManifestReference && !(matchesRequiredBlocksArray && matchesDependencyRefsArray)) {
+      issues.push(
+        `recipe sourceExport ${item.sourceExport} in ${inspection.filePath} must keep installation.requiredRegistryItems aligned with ${expectedManifestReference ?? "manifest.requiredBlocks"} and dependencyRefs ${item.dependencyRefs.join(", ")}.`
+      );
+    }
+  }
+
+  return issues;
+}
+
+function buildTokenPathSet(documents: TokenDocument[]): Set<string> {
+  const tokenPaths = new Set<string>();
+
+  for (const document of documents) {
+    for (const token of document.tokens) {
+      tokenPaths.add(token.path);
+    }
+  }
+
+  return tokenPaths;
+}
+
+function collectTokenCoverageIssues(
+  manifest: ComponentManifest,
+  mappings: DesignMapping[],
+  tokenPaths: Set<string>
+): string[] {
+  const issues: string[] = [];
+
+  for (const group of manifest.tokenContract.groups) {
+    for (const token of group.tokens) {
+      if (!tokenPaths.has(token)) {
+        issues.push(`manifest tokenContract references missing token ${token}.`);
+      }
+    }
+  }
+
+  for (const mapping of mappings) {
+    for (const binding of mapping.tokenBindings) {
+      if (!tokenPaths.has(binding.token)) {
+        issues.push(`design mapping ${mapping.tool} references missing token ${binding.token}.`);
+      }
+    }
+  }
+
+  return issues;
+}
+
+function formatInvalidResult(result: RegistryVerificationResult): string {
+  const missingRefs = [
+    result.manifest,
+    ...result.sourceFiles,
+    ...result.tokenRefs,
+    ...result.designMappings
+  ].filter((reference) => !reference.exists);
+
+  const missingLines = missingRefs.map((reference) => `- ${reference.path}`).join("\n");
+  const issueLines = result.consistencyIssues.map((issue) => `- ${issue}`).join("\n");
+
+  const sections = [`${result.item.platform}/${result.item.name} failed registry validation`];
+
+  if (missingLines) {
+    sections.push(`Missing references:\n${missingLines}`);
+  }
+
+  if (issueLines) {
+    sections.push(`Consistency issues:\n${issueLines}`);
+  }
+
+  return sections.join("\n\n");
+}
+
+export function resolveRegistryIndexPath(rootDir = resolveWorkspaceRoot()): string {
+  return path.join(rootDir, registryFixturePath);
+}
+
+export async function loadRegistryIndex(rootDir = resolveWorkspaceRoot()): Promise<RegistryIndex> {
+  return readJsonFile<RegistryIndex>(resolveRegistryIndexPath(rootDir));
+}
+
+export async function loadRegistryItems(rootDir = resolveWorkspaceRoot()): Promise<RegistryVerificationResult[]> {
+  const index = await loadRegistryIndex(rootDir);
+
+  return Promise.all(
+    index.items.map(async (relativeItemPath) => {
+      const absoluteItemPath = path.join(rootDir, relativeItemPath);
+      await validateJsonFile("registry-item", absoluteItemPath, rootDir);
+      const item = await readJsonFile<RegistryItem>(absoluteItemPath);
+      const manifest = await checkRelativePath(rootDir, item.manifestRef);
+      const designMappings: RegistryRefCheck[] = [];
+      const sourceFiles = await Promise.all(item.sourceFiles.map((sourceFile) => checkRelativePath(rootDir, sourceFile)));
+      const tokenRefs = await Promise.all(item.tokenRefs.map((tokenRef) => checkRelativePath(rootDir, tokenRef)));
+      const tokenDocuments: TokenDocument[] = [];
+      const consistencyIssues = [
+        ...collectNamespaceIssues(item),
+        ...collectInstallIssues(item),
+        ...collectSourcePackageIssues(item)
+      ];
+
+      for (const tokenRef of tokenRefs) {
+        if (tokenRef.exists) {
+          const tokenPath = path.join(rootDir, tokenRef.path);
+          await validateJsonFile("token", tokenPath, rootDir);
+          const tokenDocument = await readJsonFile<TokenDocument>(tokenPath);
+          assertTokenDocumentSemantics(tokenDocument);
+          tokenDocuments.push(tokenDocument);
+        }
+      }
+
+      if (manifest.exists) {
+        const manifestPath = path.join(rootDir, item.manifestRef);
+        const manifestKind = item.type === "recipe" ? "recipe" : "component-manifest";
+        await validateJsonFile(manifestKind, manifestPath, rootDir);
+
+        if (manifestKind === "recipe") {
+          const manifestDocument = await readJsonFile<RecipeDocument>(manifestPath);
+          consistencyIssues.push(
+            ...collectManifestConsistencyIssues(item, manifestDocument),
+            ...(await collectRecipeSourceExportIssues(item, manifestDocument, rootDir))
+          );
+        } else {
+          const manifestDocument = await readJsonFile<ComponentManifest>(manifestPath);
+          consistencyIssues.push(
+            ...collectManifestConsistencyIssues(item, manifestDocument),
+            ...(await collectSourceExportIssues(item, manifestDocument, rootDir))
+          );
+
+          const mappingRef = await checkRelativePath(rootDir, manifestDocument.designMappingRef);
+          designMappings.push(mappingRef);
+          const mappingDocuments: DesignMapping[] = [];
+
+          if (mappingRef.exists) {
+            const mappingPath = path.join(rootDir, mappingRef.path);
+            await validateJsonFile("design-mapping", mappingPath, rootDir);
+            const mappingDocument = await readJsonFile<DesignMapping>(mappingPath);
+            mappingDocuments.push(mappingDocument);
+            consistencyIssues.push(
+              ...collectMappingConsistencyIssues(item, manifestDocument, mappingDocuments),
+              ...collectTokenCoverageIssues(
+                manifestDocument,
+                mappingDocuments,
+                buildTokenPathSet(tokenDocuments)
+              )
+            );
+          }
+        }
+      }
+
+      const valid =
+        manifest.exists &&
+        designMappings.every((reference) => reference.exists) &&
+        sourceFiles.every((reference) => reference.exists) &&
+        tokenRefs.every((reference) => reference.exists) &&
+        consistencyIssues.length === 0;
+
+      return {
+        itemPath: relativeItemPath,
+        item,
+        manifest,
+        designMappings,
+        sourceFiles,
+        tokenRefs,
+        consistencyIssues,
+        valid
+      };
+    })
+  );
+}
+
+export async function assertRegistryIntegrity(rootDir = resolveWorkspaceRoot()): Promise<RegistryVerificationResult[]> {
+  const results = await loadRegistryItems(rootDir);
+  const duplicateRegistryIdError = formatDuplicateRegistryIdError(results);
+
+  if (duplicateRegistryIdError) {
+    throw new Error(duplicateRegistryIdError);
+  }
+
+  const registryItemsById = new Map(results.map((result) => [result.item.id, result.item]));
+  const surfaceIds = new Set(
+    results
+      .filter((result) => result.item.type !== "recipe")
+      .map((result) => result.item.id)
+  );
+
+  for (const result of results) {
+    result.consistencyIssues.push(...collectRegistryReferenceIssues(result.item, registryItemsById));
+
+    if (result.manifest.exists) {
+      const manifestPath = path.join(rootDir, result.item.manifestRef);
+
+      if (result.item.type === "recipe") {
+        const manifestDocument = await readJsonFile<RecipeDocument>(manifestPath);
+        result.consistencyIssues.push(...collectRecipeCatalogIssues(manifestDocument, surfaceIds));
+      } else {
+        const manifestDocument = await readJsonFile<ComponentManifest>(manifestPath);
+        result.consistencyIssues.push(...collectComponentCatalogIssues(manifestDocument, surfaceIds));
+      }
+    }
+
+    result.valid =
+      result.manifest.exists &&
+      result.designMappings.every((reference) => reference.exists) &&
+      result.sourceFiles.every((reference) => reference.exists) &&
+      result.tokenRefs.every((reference) => reference.exists) &&
+      result.consistencyIssues.length === 0;
+  }
+
+  const invalidResults = results.filter((result) => !result.valid);
+
+  if (invalidResults.length > 0) {
+    throw new Error(invalidResults.map((result) => formatInvalidResult(result)).join("\n\n"));
+  }
+
+  return results;
+}
+
+export async function resolveRegistryItem(
+  registryId: string,
+  rootDir = resolveWorkspaceRoot()
+): Promise<RegistryVerificationResult> {
+  const results = await assertRegistryIntegrity(rootDir);
+  const matches = results.filter((result) => result.item.id === registryId);
+
+  if (matches.length > 1) {
+    const itemPaths = matches.map((result) => result.itemPath).join(", ");
+    throw new Error(`Ambiguous registry item ${registryId}: ${itemPaths}`);
+  }
+
+  const [match] = matches;
+
+  if (!match) {
+    throw new Error(`Unknown registry item: ${registryId}`);
+  }
+
+  return match;
+}
+
+export async function resolveRegistryAddItem(
+  registryId: string,
+  rootDir = resolveWorkspaceRoot()
+): Promise<RegistryAddResolution> {
+  const result = await resolveRegistryItem(registryId, rootDir);
+
+  if (result.item.type !== "recipe") {
+    return result;
+  }
+
+  const manifestPath = path.join(rootDir, result.item.manifestRef);
+  const manifest = await readJsonFile<RecipeDocument>(manifestPath);
+
+  return {
+    ...result,
+    recipePlan: await extractRecipeAddPlan(result.item, manifest, rootDir)
+  };
+}
+
+export function summarizeRegistry(results: RegistryVerificationResult[]): RegistrySummary {
+  const namespaces: Record<string, number> = {};
+  const platforms: Record<string, number> = {};
+  const types: Record<string, number> = {};
+
+  for (const result of results) {
+    incrementCounter(namespaces, result.item.namespace);
+    incrementCounter(platforms, result.item.platform);
+    incrementCounter(types, result.item.type);
+  }
+
+  return {
+    itemCount: results.length,
+    namespaces: sortCounter(namespaces),
+    platforms: sortCounter(platforms),
+    types: sortCounter(types)
+  };
+}
+
+export type { RecipeAddPlan, RecipeAddPlanCompositionEntry } from "./add-plan.js";

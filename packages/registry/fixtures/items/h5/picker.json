@@ -1,0 +1,38 @@
+{
+  "id": "h5.picker",
+  "name": "picker",
+  "namespace": "h5",
+  "platform": "h5",
+  "type": "component",
+  "sourcePackage": "@vekui/ui-h5",
+  "sourceExport": "h5PickerContract",
+  "sourceFiles": [
+    "packages/ui-h5/src/picker.ts"
+  ],
+  "manifestRef": "packages/ui-h5/manifests/picker.manifest.json",
+  "manifestId": "h5.picker",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/mobile"],
+    "requiredDirectories": ["src/components/mobile"]
+  },
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "registryTags": ["selection", "mobile", "form"],
+  "aiHints": {
+    "intentKeywords": ["picker", "wheel", "single-select", "cascading-select"],
+    "adaptationNotes": [
+      "Use picker for bounded option sets that benefit from thumb-driven wheel selection inside a dedicated sheet.",
+      "Prefer this starter when isolating selection from the underlying page improves focus and reduces accidental taps."
+    ],
+    "preferredRecipes": []
+  },
+  "hash": "h5-picker-v1"
+}

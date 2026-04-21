@@ -1,0 +1,79 @@
+{
+  "componentId": "neutral.filter-bar",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.neutral.filter-bar.background",
+      "target": "fill.surface"
+    }
+  ],
+  "variantMappings": [
+    {
+      "variant": "density",
+      "value": "comfortable",
+      "target": "layout.density.comfortable"
+    },
+    {
+      "variant": "density",
+      "value": "compact",
+      "target": "layout.density.compact"
+    },
+    {
+      "variant": "filter-layout",
+      "value": "inline",
+      "target": "layout.filters.inline"
+    },
+    {
+      "variant": "filter-layout",
+      "value": "wrap",
+      "target": "layout.filters.wrap"
+    },
+    {
+      "variant": "primary-action-placement",
+      "value": "trailing",
+      "target": "layout.primary-action.trailing"
+    },
+    {
+      "variant": "primary-action-placement",
+      "value": "separate-row",
+      "target": "layout.primary-action.separate-row"
+    }
+  ],
+  "slotMappings": [
+    {
+      "slot": "search-input",
+      "target": "content.search"
+    },
+    {
+      "slot": "filter-groups",
+      "target": "content.filters"
+    },
+    {
+      "slot": "result-summary",
+      "target": "content.summary"
+    },
+    {
+      "slot": "primary-action",
+      "target": "content.primary-action"
+    },
+    {
+      "slot": "secondary-actions",
+      "target": "content.secondary-actions"
+    }
+  ],
+  "stateMappings": [
+    {
+      "state": "busy",
+      "target": "state.loading"
+    },
+    {
+      "state": "has-active-filters",
+      "target": "state.has-active-filters"
+    }
+  ],
+  "assetRefs": [],
+  "syncRules": [
+    "Keep the filter grouping order stable between source and Pencil to preserve scanning rhythm.",
+    "Treat the primary action as optional shared chrome, not a required platform-specific button."
+  ]
+}

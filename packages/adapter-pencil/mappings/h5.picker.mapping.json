@@ -1,0 +1,50 @@
+{
+  "componentId": "h5.picker",
+  "tool": "pencil",
+  "tokenBindings": [
+    {
+      "token": "component.h5.picker.background",
+      "target": "fill.surface"
+    }
+  ],
+  "variantMappings": [
+    {
+      "variant": "columns",
+      "value": "single",
+      "target": "content.columns.single"
+    },
+    {
+      "variant": "columns",
+      "value": "cascading",
+      "target": "content.columns.cascading"
+    }
+  ],
+  "slotMappings": [
+    {
+      "slot": "trigger",
+      "target": "content.trigger"
+    },
+    {
+      "slot": "column",
+      "target": "content.column"
+    },
+    {
+      "slot": "toolbar",
+      "target": "content.toolbar"
+    }
+  ],
+  "stateMappings": [
+    {
+      "state": "open",
+      "target": "state.open"
+    },
+    {
+      "state": "disabled",
+      "target": "state.disabled"
+    }
+  ],
+  "assetRefs": [],
+  "syncRules": [
+    "Keep column topology aligned with the columns variant so cascading data stays explicit."
+  ]
+}

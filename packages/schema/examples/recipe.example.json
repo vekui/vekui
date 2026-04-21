@@ -3,8 +3,8 @@
   "platform": "pc",
   "intent": "list-page",
   "layout": "page-shell",
-  "requiredBlocks": ["neutral.filter-bar"],
-  "optionalBlocks": ["neutral.data-summary-cards"],
+  "requiredBlocks": ["neutral.filter-bar", "pc.table-section"],
+  "optionalBlocks": [],
   "regions": [
     {
       "name": "body",
@@ -12,9 +12,8 @@
       "required": true
     }
   ],
-  "layoutRules": ["Render filters before the table region."],
-  "interactionRules": ["Swap table region for empty state when data is absent."],
+  "layoutRules": ["Render neutral.filter-bar before pc.table-section within the body region."],
+  "interactionRules": ["Let pc.table-section handle the default shared table, empty, and selection states without moving neutral.filter-bar."],
   "recommendedTokens": ["semantic.color.action.primary"],
   "antiPatterns": ["Do not place destructive bulk actions above filters."]
 }
-

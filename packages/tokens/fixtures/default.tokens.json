@@ -3,13 +3,56 @@
   "modes": ["light", "dark"],
   "tokens": [
     {
+      "name": "blue-600",
+      "path": "primitive.color.blue.600",
+      "kind": "color",
+      "scope": "primitive",
+      "platforms": ["shared"],
+      "value": "#1d4ed8",
+      "description": "Base blue used to derive primary interactive surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "surface-base",
+      "path": "primitive.color.surface.base",
+      "kind": "color",
+      "scope": "primitive",
+      "platforms": ["shared"],
+      "value": "#ffffff",
+      "description": "Base surface color used across neutral and mobile containers.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
       "name": "action-primary",
       "path": "semantic.color.action.primary",
       "kind": "color",
       "scope": "semantic",
       "platforms": ["shared"],
-      "value": "#1d4ed8",
-      "exportTargets": ["css-vars", "tailwind", "pencil", "figma"]
+      "aliasOf": "primitive.color.blue.600",
+      "description": "Semantic primary action color shared across product surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "button-background",
+      "path": "component.pc.button.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "aliasOf": "semantic.color.action.primary",
+      "component": "pc.button",
+      "description": "Resolved background token for the core PC button family.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "filter-bar-background",
+      "path": "component.neutral.filter-bar.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["shared"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "neutral.filter-bar",
+      "description": "Background surface token for the shared neutral filter bar block.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
     },
     {
       "name": "button-radius",
@@ -19,8 +62,63 @@
       "platforms": ["pc"],
       "value": "10px",
       "component": "pc.button",
-      "exportTargets": ["css-vars", "tailwind"]
+      "description": "Corner radius for the core PC button family.",
+      "exportTargets": ["css-vars", "tailwind", "json"]
+    },
+    {
+      "name": "table-section-background",
+      "path": "component.pc.table-section.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "pc.table-section",
+      "description": "Background surface token for dense PC result-region sections.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "table-section-divider",
+      "path": "component.pc.table-section.divider",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "value": "#e5e7eb",
+      "component": "pc.table-section",
+      "description": "Divider token for row and section separators inside the PC table-section scaffold.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "sheet-background",
+      "path": "component.h5.sheet.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "h5.sheet",
+      "description": "Background surface token for the mobile sheet primitive.",
+      "exportTargets": ["css-vars", "tailwind", "json"]
+    },
+    {
+      "name": "action-sheet-background",
+      "path": "component.h5.action-sheet.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "h5.action-sheet",
+      "description": "Background surface token for mobile action sheets and short contextual menus.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
+    },
+    {
+      "name": "picker-background",
+      "path": "component.h5.picker.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["h5"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "h5.picker",
+      "description": "Background surface token for touch-first wheel picker surfaces.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "json"]
     }
   ]
 }
-

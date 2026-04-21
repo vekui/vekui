@@ -7,10 +7,20 @@
       "target": "fill.primary"
     }
   ],
-  "variantMappings": [],
+  "variantMappings": [
+    {
+      "variant": "tone",
+      "value": "primary",
+      "target": "variant.tone.primary"
+    },
+    {
+      "variant": "tone",
+      "value": "secondary",
+      "target": "variant.tone.secondary"
+    }
+  ],
   "slotMappings": [],
   "stateMappings": [],
   "assetRefs": [],
   "syncRules": ["Preserve component and token ids across sync."]
 }
-

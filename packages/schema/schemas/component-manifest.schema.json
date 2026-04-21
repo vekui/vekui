@@ -2,6 +2,101 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vekui Component Manifest",
   "type": "object",
+  "$defs": {
+    "componentId": {
+      "type": "string",
+      "pattern": "^(pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*$"
+    },
+    "compositionSurfaceId": {
+      "type": "string",
+      "pattern": "^((pc|h5|neutral)\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*|app\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)*)$"
+    },
+    "tokenPath": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:\\.[a-z0-9-]+)+$"
+    },
+    "slot": {
+      "type": "object",
+      "required": ["name", "required"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "required": { "type": "boolean" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "variant": {
+      "type": "object",
+      "required": ["name", "type", "default"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "type": { "type": "string", "enum": ["enum", "boolean", "string"] },
+        "values": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "default": {}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "enum" }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["values"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["name", "controllable", "defaultValue"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "controllable": { "type": "boolean" },
+        "defaultValue": {}
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": ["name", "payload"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^on[A-Z][A-Za-z0-9]+$" },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "tokenGroup": {
+      "type": "object",
+      "required": ["name", "tokens"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "tokens": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tokenPath" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "exampleRef": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
   "required": [
     "id",
     "platform",
@@ -23,25 +118,70 @@
     "examples"
   ],
   "properties": {
-    "id": { "type": "string" },
-    "platform": { "type": "string" },
-    "level": { "type": "string" },
-    "category": { "type": "string" },
-    "title": { "type": "string" },
-    "description": { "type": "string" },
-    "family": { "type": "string" },
-    "status": { "type": "string" },
-    "slots": { "type": "array", "items": { "type": "object" } },
-    "variants": { "type": "array", "items": { "type": "object" } },
-    "states": { "type": "array", "items": { "type": "object" } },
-    "events": { "type": "array", "items": { "type": "object" } },
-    "a11y": { "type": "object" },
-    "tokenContract": { "type": "object" },
-    "constraints": { "type": "object" },
-    "composition": { "type": "object" },
-    "designMappingRef": { "type": "string" },
-    "examples": { "type": "array", "items": { "type": "object" } }
+    "id": { "$ref": "#/$defs/componentId" },
+    "platform": { "type": "string", "enum": ["pc", "h5", "shared"] },
+    "level": { "type": "string", "enum": ["core", "composite", "block"] },
+    "category": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "title": { "type": "string", "minLength": 2 },
+    "description": { "type": "string", "minLength": 12 },
+    "family": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "status": { "type": "string", "enum": ["draft", "experimental", "stable", "deprecated"] },
+    "slots": { "type": "array", "items": { "$ref": "#/$defs/slot" } },
+    "variants": { "type": "array", "items": { "$ref": "#/$defs/variant" } },
+    "states": { "type": "array", "items": { "$ref": "#/$defs/state" } },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "a11y": {
+      "type": "object",
+      "required": ["role"],
+      "properties": {
+        "role": { "type": "string" },
+        "attributes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "tokenContract": {
+      "type": "object",
+      "required": ["groups"],
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tokenGroup" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["doNotUseWhen"],
+      "properties": {
+        "doNotUseWhen": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "composition": {
+      "type": "object",
+      "required": ["recommendedChildren"],
+      "properties": {
+        "recommendedChildren": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/compositionSurfaceId" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "designMappingRef": {
+      "type": "string",
+      "pattern": "^packages/.+\\.json$"
+    },
+    "examples": { "type": "array", "items": { "$ref": "#/$defs/exampleRef" } }
   },
   "additionalProperties": false
 }
-

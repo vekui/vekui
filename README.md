@@ -36,6 +36,9 @@ examples/   Small examples and smoke-test fixtures
 ```bash
 corepack pnpm install
 corepack pnpm verify
+corepack pnpm vekui validate --json
+corepack pnpm vekui registry list
+corepack pnpm vekui tokens inspect
 ```
 
 ## V1 Focus
@@ -46,3 +49,25 @@ corepack pnpm verify
 - Token Studio groundwork
 - Pencil adapter groundwork
 
+## Current CLI Surface
+
+- `vekui init [pc|h5]`
+- `vekui add <registry-id>`
+- `vekui validate`
+- `vekui validate schema`
+- `vekui validate registry`
+- `vekui registry list`
+- `vekui tokens inspect [token-document-path]`
+- `vekui theme apply <theme-patch-path>`
+- `vekui theme export [token-document-path]`
+- `vekui sync pencil <registry-id>`
+
+All commands support `--json` for machine-readable output.
+
+## Protocol Docs
+
+- [Schema Surfaces](./docs/protocols/schema-surfaces.md)
+- [Source Registry Contract](./docs/protocols/source-registry.md)
+- [CLI Workspace Contract](./docs/protocols/cli-workspace.md)
+- [Token Compilation Contract](./docs/protocols/token-compilation.md)
+- [H5 Primitive Contract](./docs/protocols/h5-primitives.md)
