@@ -1,0 +1,121 @@
+{
+  "id": "pc.table-section",
+  "platform": "pc",
+  "level": "composite",
+  "category": "data-display",
+  "title": "Table Section",
+  "description": "A dense PC result-region skeleton that wraps table chrome, paging, selection state, and empty handling.",
+  "family": "table-section",
+  "status": "experimental",
+  "slots": [
+    {
+      "name": "toolbar",
+      "required": false,
+      "description": "Optional result controls that live above the dense result area."
+    },
+    {
+      "name": "table",
+      "required": true,
+      "description": "The required dense result surface for rows and columns."
+    },
+    {
+      "name": "pagination",
+      "required": false,
+      "description": "Optional paging controls attached to the current result set."
+    },
+    {
+      "name": "empty-state",
+      "required": false,
+      "description": "Optional empty-state content shown when the result set has no rows."
+    }
+  ],
+  "variants": [
+    {
+      "name": "density",
+      "type": "enum",
+      "values": ["comfortable", "compact"],
+      "default": "comfortable"
+    },
+    {
+      "name": "selection",
+      "type": "enum",
+      "values": ["none", "single", "multiple"],
+      "default": "multiple"
+    },
+    {
+      "name": "empty-state",
+      "type": "enum",
+      "values": ["inline", "dedicated"],
+      "default": "dedicated"
+    }
+  ],
+  "states": [
+    {
+      "name": "busy",
+      "controllable": true,
+      "defaultValue": false
+    },
+    {
+      "name": "empty",
+      "controllable": true,
+      "defaultValue": false
+    },
+    {
+      "name": "has-selection",
+      "controllable": true,
+      "defaultValue": false
+    }
+  ],
+  "events": [
+    {
+      "name": "onSelectionChange",
+      "payload": {
+        "selectionCount": "number",
+        "selectionMode": "none|single|multiple"
+      }
+    },
+    {
+      "name": "onRowOpen",
+      "payload": {
+        "rowKey": "string"
+      }
+    }
+  ],
+  "a11y": {
+    "role": "region",
+    "attributes": ["aria-label", "aria-busy"]
+  },
+  "tokenContract": {
+    "groups": [
+      {
+        "name": "surface",
+        "tokens": ["component.pc.table-section.background"]
+      },
+      {
+        "name": "divider",
+        "tokens": ["component.pc.table-section.divider"]
+      }
+    ]
+  },
+  "constraints": {
+    "doNotUseWhen": [
+      "The surface needs spreadsheet-grade editing, frozen columns, or grid authoring behavior.",
+      "The flow is primarily card-based or requires a mobile-first stacked list instead of a dense PC result region."
+    ]
+  },
+  "composition": {
+    "recommendedChildren": []
+  },
+  "designMappingRef": "packages/adapter-pencil/mappings/pc.table-section.mapping.json",
+  "examples": [
+    {
+      "name": "basic"
+    },
+    {
+      "name": "with-selection"
+    },
+    {
+      "name": "empty"
+    }
+  ]
+}

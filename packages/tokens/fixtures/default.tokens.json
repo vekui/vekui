@@ -66,6 +66,28 @@
       "exportTargets": ["css-vars", "tailwind", "json"]
     },
     {
+      "name": "table-section-background",
+      "path": "component.pc.table-section.background",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "aliasOf": "primitive.color.surface.base",
+      "component": "pc.table-section",
+      "description": "Background surface token for dense PC result-region sections.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
+      "name": "table-section-divider",
+      "path": "component.pc.table-section.divider",
+      "kind": "color",
+      "scope": "component",
+      "platforms": ["pc"],
+      "value": "#e5e7eb",
+      "component": "pc.table-section",
+      "description": "Divider token for row and section separators inside the PC table-section scaffold.",
+      "exportTargets": ["css-vars", "tailwind", "pencil", "figma", "json"]
+    },
+    {
       "name": "sheet-background",
       "path": "component.h5.sheet.background",
       "kind": "color",

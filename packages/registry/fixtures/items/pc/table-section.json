@@ -1,0 +1,38 @@
+{
+  "id": "pc.table-section",
+  "name": "table-section",
+  "namespace": "pc",
+  "platform": "pc",
+  "type": "component",
+  "sourcePackage": "@vekui/ui-pc",
+  "sourceExport": "pcTableSectionContract",
+  "sourceFiles": [
+    "packages/ui-pc/src/table-section.ts"
+  ],
+  "manifestRef": "packages/ui-pc/manifests/table-section.manifest.json",
+  "manifestId": "pc.table-section",
+  "tokenRefs": [
+    "packages/tokens/fixtures/default.tokens.json"
+  ],
+  "dependencyRefs": [],
+  "peerDependencyHints": ["react", "react-dom"],
+  "install": {
+    "strategy": "copy",
+    "targets": ["src/components/ui"],
+    "requiredDirectories": ["src/components/ui"]
+  },
+  "compatibility": {
+    "react": "^19.0.0",
+    "tailwind": "^4.0.0"
+  },
+  "registryTags": ["data-display", "table", "results"],
+  "aiHints": {
+    "intentKeywords": ["table-section", "result-region", "list-results", "dense-table"],
+    "adaptationNotes": [
+      "Use this asset as the dense result region beneath shared filters on PC list pages.",
+      "Keep the contract at the section level for loading, empty, and selection chrome rather than treating it as a full table widget API."
+    ],
+    "preferredRecipes": ["recipes.pc.list-page.basic"]
+  },
+  "hash": "pc-table-section-v1"
+}
