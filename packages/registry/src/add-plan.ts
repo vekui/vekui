@@ -400,6 +400,68 @@ function readRequiredRegistryItems(
   return null;
 }
 
+function validateRegionSequence(
+  regionSequence: string[],
+  manifest: RecipeDocument,
+  item: RegistryItem,
+  filePath: string
+): void {
+  const expectedRegionSequence = manifest.regions.map((region) => region.name);
+
+  if (
+    regionSequence.length !== expectedRegionSequence.length ||
+    regionSequence.some((region, index) => region !== expectedRegionSequence[index])
+  ) {
+    throw new Error(
+      `Recipe add-plan regionSequence in ${filePath} drifted from manifest.regions for ${item.id}. Expected ${expectedRegionSequence.join(", ")}.`
+    );
+  }
+}
+
+function validateDefaultComposition(
+  defaultComposition: RecipeAddPlanCompositionEntry[],
+  manifest: RecipeDocument,
+  item: RegistryItem,
+  filePath: string
+): void {
+  const manifestRegionsByName = new Map(manifest.regions.map((region) => [region.name, region]));
+  const seenRegions = new Set<string>();
+
+  for (const entry of defaultComposition) {
+    const manifestRegion = manifestRegionsByName.get(entry.region);
+
+    if (!manifestRegion) {
+      throw new Error(
+        `Recipe add-plan defaultComposition in ${filePath} references unknown region ${entry.region} for ${item.id}.`
+      );
+    }
+
+    if (seenRegions.has(entry.region)) {
+      throw new Error(
+        `Recipe add-plan defaultComposition in ${filePath} contains duplicate region ${entry.region} for ${item.id}.`
+      );
+    }
+
+    seenRegions.add(entry.region);
+
+    for (const child of entry.children) {
+      if (!manifestRegion.accepts.includes(child)) {
+        throw new Error(
+          `Recipe add-plan defaultComposition in ${filePath} references child ${child} that is not accepted by manifest region ${entry.region} for ${item.id}.`
+        );
+      }
+    }
+  }
+
+  for (const region of manifest.regions) {
+    if (region.required && !seenRegions.has(region.name)) {
+      throw new Error(
+        `Recipe add-plan defaultComposition in ${filePath} must include required manifest region ${region.name} for ${item.id}.`
+      );
+    }
+  }
+}
+
 export async function extractRecipeAddPlan(
   item: RegistryItem,
   manifest: RecipeDocument,
@@ -448,6 +510,9 @@ export async function extractRecipeAddPlan(
       `Recipe add-plan installStrategy ${installStrategy} drifted from registry install strategy ${item.install.strategy} for ${item.id}.`
     );
   }
+
+  validateRegionSequence(regionSequence, manifest, item, inspection.filePath);
+  validateDefaultComposition(defaultComposition, manifest, item, inspection.filePath);
 
   return {
     assembly: {

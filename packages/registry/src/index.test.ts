@@ -216,3 +216,45 @@ test("resolveRegistryAddItem extracts the shipped recipe add plan", async () => 
     await rm(workspaceRoot, { recursive: true, force: true });
   }
 });
+
+test("resolveRegistryAddItem rejects recipe regionSequence drift", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    await updateTextFile(workspaceRoot, "packages/recipes/src/pc-list-page-basic.ts", (source) =>
+      source.replace(
+        'regionSequence: pcListPageBasicRecipe.regions.map((region) => region.name)',
+        'regionSequence: ["stale-body"]'
+      )
+    );
+
+    await assert.rejects(() => resolveRegistryAddItem("recipes.pc.list-page.basic", workspaceRoot), (error: unknown) => {
+      assert.match(String(error), /regionSequence/);
+      assert.match(String(error), /manifest\.regions/);
+      return true;
+    });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test("resolveRegistryAddItem rejects recipe defaultComposition drift", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    await updateTextFile(workspaceRoot, "packages/recipes/src/pc-list-page-basic.ts", (source) =>
+      source.replace(
+        'children: ["neutral.filter-bar", "pc.table-section"]',
+        'children: ["neutral.filter-bar", "app.result-region"]'
+      )
+    );
+
+    await assert.rejects(() => resolveRegistryAddItem("recipes.pc.list-page.basic", workspaceRoot), (error: unknown) => {
+      assert.match(String(error), /defaultComposition/);
+      assert.match(String(error), /app\.result-region/);
+      return true;
+    });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
