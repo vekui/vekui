@@ -13,6 +13,7 @@ import {
 } from "../../schema/src/index.js";
 import {
   assertRegistryIntegrity,
+  resolveRegistryAddItem,
   resolveRegistryItem,
   summarizeRegistry,
   type RegistrySummary,
@@ -75,6 +76,35 @@ interface ThemeExportPayload {
     figma: unknown;
     json: unknown;
   };
+}
+
+interface AddRecipePlanPayload {
+  installStrategy: string;
+  installTarget: string;
+  requiredRegistryItems: string[];
+  scaffoldFiles: string[];
+  regionSequence: string[];
+  defaultComposition: Array<{
+    region: string;
+    children: string[];
+  }>;
+}
+
+interface AddPayload {
+  workspaceRoot: string;
+  registryId: string;
+  itemType: string;
+  sourcePackage: string;
+  sourceExport: string;
+  installTargets: string[];
+  requiredDirectories: string[];
+  sourceFiles: string[];
+  manifestRef: string;
+  tokenRefs: string[];
+  peerDependencies: string[];
+  dependencyRefs: string[];
+  aiHints: object;
+  recipePlan?: AddRecipePlanPayload;
 }
 
 function writeLine(output: OutputStream, message = ""): void {
@@ -166,18 +196,10 @@ function renderInitText(
 
 function renderAddText(
   output: OutputStream,
-  payload: {
-    registryId: string;
-    sourcePackage: string;
-    sourceExport: string;
-    installTargets: string[];
-    sourceFiles: string[];
-    manifestRef: string;
-    tokenRefs: string[];
-    peerDependencies: string[];
-  }
+  payload: AddPayload
 ): void {
   writeLine(output, `Add plan for ${payload.registryId}`);
+  writeLine(output, `Item type: ${payload.itemType}`);
   writeLine(output, `Source package: ${payload.sourcePackage}`);
   writeLine(output, `Source export: ${payload.sourceExport}`);
   writeLine(output, `Install targets: ${payload.installTargets.join(", ")}`);
@@ -185,6 +207,26 @@ function renderAddText(
   writeLine(output, `Manifest: ${payload.manifestRef}`);
   writeLine(output, `Token docs: ${payload.tokenRefs.join(", ")}`);
   writeLine(output, `Peer deps: ${payload.peerDependencies.join(", ")}`);
+  writeLine(
+    output,
+    `Dependencies: ${payload.dependencyRefs.length > 0 ? payload.dependencyRefs.join(", ") : "none"}`
+  );
+
+  if (!payload.recipePlan) {
+    return;
+  }
+
+  writeLine(
+    output,
+    `Required registry items: ${payload.recipePlan.requiredRegistryItems.join(", ")}`
+  );
+  writeLine(output, `Scaffold files: ${payload.recipePlan.scaffoldFiles.join(", ")}`);
+  writeLine(output, `Region sequence: ${payload.recipePlan.regionSequence.join(", ")}`);
+  writeLine(output, "Default composition:");
+
+  for (const entry of payload.recipePlan.defaultComposition) {
+    writeLine(output, `${entry.region}: ${entry.children.join(", ")}`);
+  }
 }
 
 function renderThemeApplyText(
@@ -374,10 +416,11 @@ async function runInitCommand(
 }
 
 async function runAddCommand(registryId: string, rootDir: string, jsonOutput: boolean, stdout: OutputStream): Promise<void> {
-  const result = await resolveRegistryItem(registryId, rootDir);
-  const payload = {
+  const result = await resolveRegistryAddItem(registryId, rootDir);
+  const payload: AddPayload = {
     workspaceRoot: rootDir,
     registryId: result.item.id,
+    itemType: result.item.type,
     sourcePackage: result.item.sourcePackage,
     sourceExport: result.item.sourceExport,
     installTargets: result.item.install.targets,
@@ -387,7 +430,19 @@ async function runAddCommand(registryId: string, rootDir: string, jsonOutput: bo
     tokenRefs: result.item.tokenRefs,
     peerDependencies: result.item.peerDependencyHints,
     dependencyRefs: result.item.dependencyRefs,
-    aiHints: result.item.aiHints
+    aiHints: result.item.aiHints,
+    ...(result.recipePlan
+      ? {
+          recipePlan: {
+            installStrategy: result.recipePlan.assembly.installStrategy,
+            installTarget: result.recipePlan.assembly.installTarget,
+            requiredRegistryItems: result.recipePlan.installation.requiredRegistryItems,
+            scaffoldFiles: result.recipePlan.installation.scaffoldFiles,
+            regionSequence: result.recipePlan.assembly.regionSequence,
+            defaultComposition: result.recipePlan.assembly.defaultComposition
+          }
+        }
+      : {})
   };
 
   if (jsonOutput) {
