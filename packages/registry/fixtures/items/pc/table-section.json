@@ -3,7 +3,7 @@
   "name": "table-section",
   "namespace": "pc",
   "platform": "pc",
-  "type": "component",
+  "type": "block",
   "sourcePackage": "@vekui/ui-pc",
   "sourceExport": "pcTableSectionContract",
   "sourceFiles": [
@@ -34,5 +34,5 @@
     ],
     "preferredRecipes": ["recipes.pc.list-page.basic"]
   },
-  "hash": "pc-table-section-v1"
+  "hash": "pc-table-section-v2"
 }
