@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { ComponentManifest, RecipeDocument, RegistryItem } from "../../schema/src/index.js";
-import { assertRegistryIntegrity } from "./index.js";
+import { assertRegistryIntegrity, resolveRegistryAddItem } from "./index.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "../../..");
 const packagesRoot = path.join(repoRoot, "packages");
@@ -183,6 +183,35 @@ test("assertRegistryIntegrity rejects string variants with zero mapping coverage
       assert.match(String(error), /string variant tone/);
       return true;
     });
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test("resolveRegistryAddItem extracts the shipped recipe add plan", async () => {
+  const workspaceRoot = await createTempWorkspace();
+
+  try {
+    const resolved = await resolveRegistryAddItem("recipes.pc.list-page.basic", workspaceRoot);
+
+    assert.equal(resolved.item.id, "recipes.pc.list-page.basic");
+    assert.ok(resolved.recipePlan);
+    assert.deepStrictEqual(resolved.recipePlan.assembly.dependencyOrder, [
+      "neutral.filter-bar",
+      "pc.table-section"
+    ]);
+    assert.deepStrictEqual(resolved.recipePlan.installation.requiredRegistryItems, [
+      "neutral.filter-bar",
+      "pc.table-section"
+    ]);
+    assert.deepStrictEqual(resolved.recipePlan.installation.scaffoldFiles, [
+      "src/recipes/pc-list-page-basic.ts"
+    ]);
+    assert.ok(
+      resolved.recipePlan.assembly.defaultComposition.some(
+        (entry) => entry.children.includes("pc.table-section")
+      )
+    );
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }

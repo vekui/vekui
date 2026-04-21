@@ -1,6 +1,5 @@
-import { access, readFile } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import path from "node:path";
-import ts from "typescript";
 import { assertTokenDocumentSemantics } from "../../tokens/src/index.js";
 import {
   readJsonFile,
@@ -13,6 +12,16 @@ import {
   type TokenDocument,
   type VekuiNamespace
 } from "../../schema/src/index.js";
+import {
+  extractRecipeAddPlan,
+  findObjectPropertyExpression,
+  findObjectPropertyObjectLiteral,
+  readReferencePath,
+  readStringArrayValue,
+  readStringLiteralValue,
+  resolveSourceExportSurface,
+  type RecipeAddPlan
+} from "./add-plan.js";
 
 export const registryFixturePath = "packages/registry/fixtures/index.json";
 
@@ -42,6 +51,10 @@ export interface RegistrySummary {
   namespaces: Record<string, number>;
   platforms: Record<string, number>;
   types: Record<string, number>;
+}
+
+export interface RegistryAddResolution extends RegistryVerificationResult {
+  recipePlan?: RecipeAddPlan;
 }
 
 const appOwnedSurfaceIdPattern = /^app\.[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
@@ -327,260 +340,8 @@ function collectRecipeCatalogIssues(manifest: RecipeDocument, surfaceIds: Set<st
   return issues;
 }
 
-interface SourceExportSurface {
-  filePath: string;
-  found: boolean;
-  inspectable: boolean;
-  topLevelKeys: string[];
-  objectLiteral?: ts.ObjectLiteralExpression;
-  sourceFile?: ts.SourceFile;
-}
-
-function hasExportModifier(node: ts.Node): boolean {
-  if (!ts.canHaveModifiers(node)) {
-    return false;
-  }
-
-  return ts.getModifiers(node)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false;
-}
-
-function resolvePropertyName(name: ts.PropertyName): string | null {
-  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-    return name.text;
-  }
-
-  return null;
-}
-
-function collectObjectLiteralKeys(initializer: ts.ObjectLiteralExpression): string[] {
-  const keys: string[] = [];
-
-  for (const property of initializer.properties) {
-    if (
-      ts.isPropertyAssignment(property) ||
-      ts.isShorthandPropertyAssignment(property) ||
-      ts.isMethodDeclaration(property) ||
-      ts.isGetAccessorDeclaration(property) ||
-      ts.isSetAccessorDeclaration(property)
-    ) {
-      const key = resolvePropertyName(property.name);
-
-      if (key) {
-        keys.push(key);
-      }
-    }
-  }
-
-  return keys;
-}
-
-function unwrapExpression(expression: ts.Expression): ts.Expression {
-  if (
-    ts.isParenthesizedExpression(expression) ||
-    ts.isAsExpression(expression) ||
-    ts.isSatisfiesExpression(expression) ||
-    ts.isTypeAssertionExpression(expression)
-  ) {
-    return unwrapExpression(expression.expression);
-  }
-
-  return expression;
-}
-
-function findObjectPropertyExpression(
-  objectLiteral: ts.ObjectLiteralExpression,
-  propertyName: string
-): ts.Expression | null {
-  for (const property of objectLiteral.properties) {
-    if (!ts.isPropertyAssignment(property)) {
-      continue;
-    }
-
-    const resolvedName = resolvePropertyName(property.name);
-
-    if (resolvedName === propertyName) {
-      return unwrapExpression(property.initializer);
-    }
-  }
-
-  return null;
-}
-
-function findObjectPropertyObjectLiteral(
-  objectLiteral: ts.ObjectLiteralExpression,
-  propertyName: string
-): ts.ObjectLiteralExpression | null {
-  const expression = findObjectPropertyExpression(objectLiteral, propertyName);
-
-  return expression && ts.isObjectLiteralExpression(expression) ? expression : null;
-}
-
-function readStringLiteralValue(expression: ts.Expression | null): string | null {
-  if (!expression) {
-    return null;
-  }
-
-  const unwrappedExpression = unwrapExpression(expression);
-
-  return ts.isStringLiteral(unwrappedExpression) || ts.isNoSubstitutionTemplateLiteral(unwrappedExpression)
-    ? unwrappedExpression.text
-    : null;
-}
-
-function readStringArrayValue(expression: ts.Expression | null): string[] | null {
-  if (!expression) {
-    return null;
-  }
-
-  const unwrappedExpression = unwrapExpression(expression);
-
-  if (!ts.isArrayLiteralExpression(unwrappedExpression)) {
-    return null;
-  }
-
-  const values: string[] = [];
-
-  for (const element of unwrappedExpression.elements) {
-    const value = readStringLiteralValue(element);
-
-    if (value === null) {
-      return null;
-    }
-
-    values.push(value);
-  }
-
-  return values;
-}
-
-function readReferencePath(expression: ts.Expression | null): string | null {
-  if (!expression) {
-    return null;
-  }
-
-  const unwrappedExpression = unwrapExpression(expression);
-
-  if (ts.isIdentifier(unwrappedExpression)) {
-    return unwrappedExpression.text;
-  }
-
-  if (ts.isPropertyAccessExpression(unwrappedExpression)) {
-    const left = readReferencePath(unwrappedExpression.expression);
-
-    return left ? `${left}.${unwrappedExpression.name.text}` : null;
-  }
-
-  return null;
-}
-
 function arraysEqual(left: string[], right: string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
-function inspectSourceExportSurface(sourceText: string, filePath: string, exportName: string): SourceExportSurface {
-  const scriptKind = filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true, scriptKind);
-  const localObjectExports = new Map<string, ts.ObjectLiteralExpression | null>();
-  const exportedBindings = new Map<string, string>();
-
-  for (const statement of sourceFile.statements) {
-    if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name)) {
-          continue;
-        }
-
-        const localName = declaration.name.text;
-        localObjectExports.set(
-          localName,
-          declaration.initializer && ts.isObjectLiteralExpression(declaration.initializer)
-            ? declaration.initializer
-            : null
-        );
-
-        if (hasExportModifier(statement)) {
-          exportedBindings.set(localName, localName);
-        }
-      }
-    }
-
-    if (
-      ts.isFunctionDeclaration(statement) &&
-      statement.name &&
-      hasExportModifier(statement)
-    ) {
-      exportedBindings.set(statement.name.text, statement.name.text);
-    }
-
-    if (
-      ts.isExportDeclaration(statement) &&
-      statement.exportClause &&
-      ts.isNamedExports(statement.exportClause) &&
-      !statement.moduleSpecifier
-    ) {
-      for (const element of statement.exportClause.elements) {
-        const exportedName = element.name.text;
-        const localName = (element.propertyName ?? element.name).text;
-        exportedBindings.set(exportedName, localName);
-      }
-    }
-  }
-
-  const localName = exportedBindings.get(exportName);
-
-  if (!localName) {
-    return {
-      filePath,
-      found: false,
-      inspectable: false,
-      topLevelKeys: []
-    };
-  }
-
-  const objectLiteral = localObjectExports.get(localName);
-
-  if (!objectLiteral) {
-    return {
-      filePath,
-      found: true,
-      inspectable: false,
-      topLevelKeys: []
-    };
-  }
-
-  return {
-    filePath,
-    found: true,
-    inspectable: true,
-    topLevelKeys: collectObjectLiteralKeys(objectLiteral),
-    objectLiteral,
-    sourceFile
-  };
-}
-
-async function resolveSourceExportSurface(
-  item: RegistryItem,
-  rootDir: string
-): Promise<SourceExportSurface | null> {
-  for (const relativePath of item.sourceFiles) {
-    const absolutePath = path.join(rootDir, relativePath);
-
-    let sourceText: string;
-
-    try {
-      sourceText = await readFile(absolutePath, "utf8");
-    } catch {
-      continue;
-    }
-
-    const inspection = inspectSourceExportSurface(sourceText, relativePath, item.sourceExport);
-
-    if (inspection.found) {
-      return inspection;
-    }
-  }
-
-  return null;
 }
 
 function toCamelCase(value: string): string {
@@ -939,6 +700,25 @@ export async function resolveRegistryItem(
   return match;
 }
 
+export async function resolveRegistryAddItem(
+  registryId: string,
+  rootDir = resolveWorkspaceRoot()
+): Promise<RegistryAddResolution> {
+  const result = await resolveRegistryItem(registryId, rootDir);
+
+  if (result.item.type !== "recipe") {
+    return result;
+  }
+
+  const manifestPath = path.join(rootDir, result.item.manifestRef);
+  const manifest = await readJsonFile<RecipeDocument>(manifestPath);
+
+  return {
+    ...result,
+    recipePlan: await extractRecipeAddPlan(result.item, manifest, rootDir)
+  };
+}
+
 export function summarizeRegistry(results: RegistryVerificationResult[]): RegistrySummary {
   const namespaces: Record<string, number> = {};
   const platforms: Record<string, number> = {};
@@ -957,3 +737,5 @@ export function summarizeRegistry(results: RegistryVerificationResult[]): Regist
     types: sortCounter(types)
   };
 }
+
+export type { RecipeAddPlan, RecipeAddPlanCompositionEntry } from "./add-plan.js";
