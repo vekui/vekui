@@ -47,8 +47,8 @@ export interface PcTableSectionContract {
 
 export const pcTableSectionContract: PcTableSectionContract = {
   density: "comfortable",
-  selection: "multiple",
-  emptyState: "dedicated",
+  selection: "none",
+  emptyState: "inline",
   slots: [
     {
       name: "toolbar",

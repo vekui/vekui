@@ -40,13 +40,13 @@
       "name": "selection",
       "type": "enum",
       "values": ["none", "single", "multiple"],
-      "default": "multiple"
+      "default": "none"
     },
     {
       "name": "empty-state",
       "type": "enum",
       "values": ["inline", "dedicated"],
-      "default": "dedicated"
+      "default": "inline"
     }
   ],
   "states": [
